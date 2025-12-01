@@ -22,7 +22,7 @@ Style:
 """
 
 # --------- STREAMLIT UI SETUP ---------
-st.set_page_config(page_title="Nexo.corp AI Chatbot", page_icon="task_01kbdc4yyres7axsn309re3k8f_1764606833_img_1")
+st.set_page_config(page_title="Nexo.corp AI Chatbot", page_icon="🤖")
 
 st.title("🤖 Nexo.corp AI Chatbot")
 st.write("Welcome to NexoBot!")
