@@ -1,10 +1,9 @@
-import os
 import streamlit as st
 from groq import Groq
 
 # --------- CONFIG ---------
-# Groq API key will come from environment (Streamlit secrets later)
-GROQ_API_KEY = GROQ_API_KEY = st.secrets.get(""GROQ_API_KEY")
+# Groq API key will come from Streamlit Secrets
+GROQ_API_KEY = st.secrets.get("GROQ_API_KEY")
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -12,58 +11,68 @@ SYSTEM_MESSAGE = """
 You are NexoBot, an AI assistant created by Nexo.corp.
 
 Your role:
-- Help with studies, motivation, basic tech/AI questions and life doubts.
+- Help with studies, motivation, basic tech/AI questions.
 - Speak simple English with a little friendly Hinglish.
 - Be kind, calm, supportive, and non-judgmental.
 
 Style:
 - Talk like a smart, chill older brother from India.
 - Never be rude.
-- Keep answers clear and not too long unless user asks for detail.
+- Keep answers clear and not too long unless user asks.
 """
 
 # --------- STREAMLIT UI SETUP ---------
 st.set_page_config(page_title="Nexo.corp AI Chatbot", page_icon="🤖")
 
-st.title("🤖 NexoBot — Nexo.corp AI Chatbot")
-st.caption("Ask about studies, motivation, basic tech/AI, or life. I’ll reply like a calm big brother.")
+st.title("🤖 Nexo.corp AI Chatbot")
+st.write("Welcome to NexoBot!")
 
-# Init chat history
+# Keep chat messages stored
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "system", "content": SYSTEM_MESSAGE}
-    ]
+    st.session_state.messages = []
 
-# Show previous messages (skip system)
-for msg in st.session_state.messages[1:]:
-    with st.chat_message("user" if msg["role"] == "user" else "assistant"):
-        st.markdown(msg["content"])
+# --------- CHAT FUNCTION ---------
+def get_ai_response(user_msg):
+    messages = [{"role": "system", "content": SYSTEM_MESSAGE}]
 
-# --------- CHAT INPUT ---------
-user_input = st.chat_input("Type your message...")
+    # Add chat history
+    for msg in st.session_state.messages:
+        messages.append({"role": msg["role"], "content": msg["content"]})
 
-if user_input:
-    # Add user message
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.markdown(user_input)
+    # Add new user message
+    messages.append({"role": "user", "content": user_msg})
 
     # Call Groq API
-    try:
-        with st.chat_message("assistant"):
-            with st.spinner("NexoBot is thinking..."):
-                chat_completion = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=st.session_state.messages,
-                )
-                reply = chat_completion.choices[0].message.content
-                st.markdown(reply)
+    response = client.chat.completions.create(
+        model="llama3-8b-8192",
+        messages=messages,
+        temperature=0.7
+    )
 
-        # Save assistant reply
-        st.session_state.messages.append({"role": "assistant", "content": reply})
+    ai_msg = response.choices[0].message.content
+    return ai_msg
 
-    except Exception as e:
-        with st.chat_message("assistant"):
-            st.error(
-                "Error talking to the AI model. Check API key / limits and try again later."
-            )
+# --------- CHAT UI ---------
+user_input = st.chat_input("Type your message...")
+
+# Show the chat history
+for msg in st.session_state.messages:
+    with st.chat_message(msg["role"]):
+        st.write(msg["content"])
+
+# When user sends a message
+if user_input:
+    # Add user msg
+    st.session_state.messages.append({"role": "user", "content": user_input})
+
+    with st.chat_message("user"):
+        st.write(user_input)
+
+    # Get AI reply
+    ai_reply = get_ai_response(user_input)
+
+    with st.chat_message("assistant"):
+        st.write(ai_reply)
+
+    # Save reply
+    st.session_state.messages.append({"role": "assistant", "content": ai_reply})
