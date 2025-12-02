@@ -241,4 +241,4 @@ if submitted and user_input.strip():
 
     # Save back
     st.session_state.conversations[st.session_state.active_chat_id] = active_messages
-    st.experimental_rerun()
+    st.rerun()
