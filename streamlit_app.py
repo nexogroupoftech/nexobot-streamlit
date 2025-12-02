@@ -11,11 +11,12 @@ st.set_page_config(
 )
 
 # -------------------
-# BASIC STYLES (Grok-like)
+# STYLES (Grok-level clean UI)
 # -------------------
 st.markdown(
     """
     <style>
+
     .stApp {
         background: #050505;
         color: #f5f5f5;
@@ -23,100 +24,122 @@ st.markdown(
     }
 
     .block-container {
-        padding-top: 1.5rem;
-        padding-bottom: 1.5rem;
+        padding-top: 1.3rem;
         max-width: 900px;
     }
 
-    /* Center header like Grok */
+    /* HEADER */
     .header-wrap {
         text-align: center;
-        margin-bottom: 1.5rem;
+        margin-bottom: 1.2rem;
     }
 
     .logo-circle {
-        width: 42px;
-        height: 42px;
+        width: 40px;
+        height: 40px;
         border-radius: 999px;
-        border: 1px solid #3f3f3f;
+        border: 1px solid #303030;
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.4rem;
-        margin-bottom: 0.4rem;
+        font-size: 1.2rem;
+        margin-bottom: 0.35rem;
     }
 
     .brand-title {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 600;
-        letter-spacing: 0.04em;
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.1rem;
     }
 
     .brand-sub {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         opacity: 0.7;
     }
 
-    /* Chat area */
-    .chat-container {
-        max-height: 480px;
+    /* CHAT BUBBLES */
+    .chat-box {
+        max-height: 500px;
         overflow-y: auto;
-        padding: 0.75rem 0.25rem 0.5rem 0.25rem;
-        margin-bottom: 0.75rem;
+        padding: 8px 3px;
+        margin-bottom: 15px;
     }
 
-    .user-bubble, .bot-bubble {
+    .bubble-user {
+        background: #111217;
         padding: 10px 14px;
-        border-radius: 12px;
+        border-radius: 14px;
+        border: 1px solid #2b2c31;
+        margin-bottom: 10px;
         font-size: 0.95rem;
-        margin-bottom: 8px;
+        text-align: left;
+        max-width: 72%;
+        float: right;
+        clear: both;
     }
 
-    .user-bubble {
-        background: #111218;
-        border: 1px solid #292a33;
-    }
-
-    .bot-bubble {
+    .bubble-bot {
         background: #08090f;
-        border: 1px solid #282a34;
+        padding: 10px 14px;
+        border-radius: 14px;
+        border: 1px solid #282a30;
+        margin-bottom: 10px;
+        font-size: 0.95rem;
+        text-align: left;
+        max-width: 72%;
+        float: left;
+        clear: both;
     }
 
     .role-label {
         font-size: 0.7rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
         opacity: 0.6;
         margin-bottom: 2px;
     }
 
-    /* Big input bar like Grok */
-    .input-wrap {
+    /* INPUT BAR */
+    .input-container {
+        background: #0a0a0a;
+        border: 1px solid #2e2e2e;
         border-radius: 999px;
-        border: 1px solid #2d2f38;
-        background: #050607;
+        padding: 6px 10px;
         display: flex;
         align-items: center;
-        padding: 4px 10px;
     }
 
-    .input-wrap input {
+    .input-container input {
         border: none !important;
         background: transparent !important;
-        color: #f5f5f5 !important;
+        color: #fff !important;
+        font-size: 0.95rem;
+        width: 100%;
+        outline: none !important;
     }
 
     .send-button {
+        background: #1a1a1a !important;
         border-radius: 999px !important;
+        border: 1px solid #3b3b3b !important;
+        padding: 6px 13px !important;
+        margin-left: 8px;
     }
 
-    .foot-note {
+    /* FOOTER */
+    .footer-note {
         font-size: 0.75rem;
-        opacity: 0.6;
+        opacity: 0.65;
         text-align: center;
-        margin-top: 0.6rem;
+        margin-top: 0.5rem;
     }
+
+    .founder-tag {
+        font-size: 0.75rem;
+        opacity: 0.55;
+        position: fixed;
+        left: 15px;
+        bottom: 10px;
+    }
+
     </style>
     """,
     unsafe_allow_html=True,
@@ -129,22 +152,12 @@ client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 MODEL_NAME = "llama-3.1-8b-instant"
 
 SYSTEM_PROMPT = """
-You are XO AI, an advanced assistant created by Nexo.corp.
-
-Tone:
-- Calm, clear, mature. Like a smart, neutral analyst.
-- Use emojis rarely, only when they really add value (for example, once in a while, not every reply).
-- No over-excited or cringe style.
-
-Skills:
-- Explain study concepts, maths, science, logic and technology.
-- Help with planning (study routine, learning path).
-- Provide grounded, practical life advice.
-- When user asks for graphs/diagrams/images, describe them in words and optionally give short Python code or an image prompt.
-
-Style:
-- Prefer short paragraphs and bullet points.
-- Be honest about uncertainty instead of guessing.
+You are XO AI, created by Nexo.corp.
+Respond with:
+- clear, mature tone
+- short paragraphs & bullet points
+- emojis rarely (only when truly needed)
+- calm, analytical style
 """
 
 # -------------------
@@ -160,20 +173,18 @@ def new_chat():
 # CALL MODEL
 # -------------------
 def generate_xo_reply(history):
-    """history: list of {'role': 'user'/'assistant', 'content': '...'}"""
-    messages_for_model = [{"role": "system", "content": SYSTEM_PROMPT}]
-    messages_for_model.extend(history)
-
-    response = client.chat.completions.create(
+    data = [{"role": "system", "content": SYSTEM_PROMPT}]
+    data.extend(history)
+    resp = client.chat.completions.create(
         model=MODEL_NAME,
-        messages=messages_for_model,
-        temperature=0.4,
-        max_tokens=700,
+        messages=data,
+        temperature=0.45,
+        max_tokens=700
     )
-    return response.choices[0].message.content.strip()
+    return resp.choices[0].message.content.strip()
 
 # -------------------
-# HEADER (Grok style)
+# HEADER
 # -------------------
 st.markdown(
     """
@@ -186,64 +197,57 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Simple "New chat" button at top-right
 top_col1, top_col2 = st.columns([0.7, 0.3])
 with top_col2:
     if st.button("New chat", use_container_width=True):
         new_chat()
 
-st.markdown("")
-
 # -------------------
 # CHAT AREA
 # -------------------
-st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
+st.markdown("<div class='chat-box'>", unsafe_allow_html=True)
 
 for msg in st.session_state.messages:
-    role = msg["role"]
-    content = msg["content"]
-
-    if role == "user":
-        st.markdown("<div class='role-label'>YOU</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='user-bubble'>{content}</div>", unsafe_allow_html=True)
-    elif role == "assistant":
-        st.markdown("<div class='role-label'>XO AI</div>", unsafe_allow_html=True)
-        st.markdown(f"<div class='bot-bubble'>{content}</div>", unsafe_allow_html=True)
+    if msg["role"] == "user":
+        st.markdown(f"<div class='bubble-user'>{msg['content']}</div>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<div class='bubble-bot'>{msg['content']}</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------
-# INPUT (Ask XO AI bar)
+# INPUT BAR
 # -------------------
-with st.form(key="chat-form", clear_on_submit=True):
-    # We fake a Grok-like bar by styling the container, but real input is normal text_input
-    st.markdown("<div class='input-wrap'>", unsafe_allow_html=True)
-    user_input = st.text_input(
-        "",
-        placeholder="Ask XO AI",
-        label_visibility="collapsed",
-    )
+with st.form("chat-input", clear_on_submit=True):
+    st.markdown("<div class='input-container'>", unsafe_allow_html=True)
+    user_text = st.text_input("", placeholder="Ask XO AI", label_visibility="collapsed")
     st.markdown("</div>", unsafe_allow_html=True)
-    submitted = st.form_submit_button("Send", use_container_width=True)
 
-if submitted and user_input.strip():
-    st.session_state.messages.append({"role": "user", "content": user_input.strip()})
+    send = st.form_submit_button("➤", help="Send", type="primary", css_class="send-button")
 
-    with st.spinner("XO AI is thinking..."):
+if send and user_text.strip():
+    st.session_state.messages.append({"role": "user", "content": user_text})
+
+    with st.spinner("Thinking..."):
         reply = generate_xo_reply(st.session_state.messages)
 
     st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
 
 # -------------------
-# FOOTER (Terms & Privacy)
+# FOOTER
 # -------------------
 st.markdown(
     """
-    <div class="foot-note">
+    <div class="footer-note">
         By messaging XO AI, you agree to our <b>Terms</b> and <b>Privacy Policy</b>.
-        (Add your real links here later.)
     </div>
     """,
+    unsafe_allow_html=True,
+)
+
+# Founder tag
+st.markdown(
+    """<div class="founder-tag">Founder: Dev • Nexo.corp</div>""",
     unsafe_allow_html=True,
 )
