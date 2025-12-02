@@ -1,10 +1,8 @@
-import os
-import time
 import streamlit as st
 from groq import Groq
 
 # -------------------
-# PAGE CONFIG & THEME
+# PAGE CONFIG
 # -------------------
 st.set_page_config(
     page_title="XO AI — Nexo.corp",
@@ -12,233 +10,240 @@ st.set_page_config(
     layout="wide",
 )
 
-# Custom CSS for full-black, Discord-style UI
+# -------------------
+# BASIC STYLES (Grok-like)
+# -------------------
 st.markdown(
     """
     <style>
-    /* Global background */
     .stApp {
-        background: radial-gradient(circle at top, #050816 0, #020308 40%, #000000 100%);
-        color: #f3f3f3;
+        background: #050505;
+        color: #f5f5f5;
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
-    /* Remove Streamlit default padding at top */
     .block-container {
-        padding-top: 1rem;
+        padding-top: 1.5rem;
         padding-bottom: 1.5rem;
-        max-width: 1150px;
+        max-width: 900px;
     }
 
-    /* Chat bubbles */
+    /* Center header like Grok */
+    .header-wrap {
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .logo-circle {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        border: 1px solid #3f3f3f;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 0.4rem;
+    }
+
+    .brand-title {
+        font-size: 1.8rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.25rem;
+    }
+
+    .brand-sub {
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+
+    /* Chat area */
+    .chat-container {
+        max-height: 480px;
+        overflow-y: auto;
+        padding: 0.75rem 0.25rem 0.5rem 0.25rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .user-bubble, .bot-bubble {
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 0.95rem;
+        margin-bottom: 8px;
+    }
+
     .user-bubble {
-        background: #101522;
-        padding: 10px 14px;
-        border-radius: 16px;
-        margin-bottom: 6px;
-        border: 1px solid rgba(255,255,255,0.05);
-    }
-    .bot-bubble {
-        background: #050a16;
-        padding: 10px 14px;
-        border-radius: 16px;
-        margin-bottom: 6px;
-        border: 1px solid rgba(0,255,255,0.12);
-        box-shadow: 0 0 18px rgba(0,255,255,0.12);
+        background: #111218;
+        border: 1px solid #292a33;
     }
 
-    /* Message meta text */
+    .bot-bubble {
+        background: #08090f;
+        border: 1px solid #282a34;
+    }
+
     .role-label {
-        font-size: 0.74rem;
+        font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.08em;
-        opacity: 0.55;
+        opacity: 0.6;
         margin-bottom: 2px;
     }
 
-    /* Chat area scroll */
-    .chat-container {
-        max-height: 540px;
-        overflow-y: auto;
-        padding-right: 6px;
+    /* Big input bar like Grok */
+    .input-wrap {
+        border-radius: 999px;
+        border: 1px solid #2d2f38;
+        background: #050607;
+        display: flex;
+        align-items: center;
+        padding: 4px 10px;
     }
 
-    /* Text input bar */
-    textarea {
-        background-color: #060814 !important;
+    .input-wrap input {
+        border: none !important;
+        background: transparent !important;
+        color: #f5f5f5 !important;
+    }
+
+    .send-button {
         border-radius: 999px !important;
     }
 
-    /* "thinking" spinner tiny */
-    .spinner-text {
-        font-size: 0.8rem;
-        opacity: 0.7;
-        margin-left: 6px;
+    .foot-note {
+        font-size: 0.75rem;
+        opacity: 0.6;
+        text-align: center;
+        margin-top: 0.6rem;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# ---------------
-# LLM CLIENT SETUP
-# ---------------
-# IMPORTANT: Set this in Streamlit secrets as GROQ_API_KEY
+# -------------------
+# LLM CLIENT
+# -------------------
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-
-MODEL_NAME = "llama-3.1-8b-instant"  # change if you use another model
+MODEL_NAME = "llama-3.1-8b-instant"
 
 SYSTEM_PROMPT = """
 You are XO AI, an advanced assistant created by Nexo.corp.
 
-Tone & style:
-- Professional, clear, and structured.
-- Friendly but not cringe. Use emojis only when they truly add emotion or clarity, not in every sentence.
-- Respond in concise paragraphs and bullet points when helpful.
+Tone:
+- Calm, clear, mature. Like a smart, neutral analyst.
+- Use emojis rarely, only when they really add value (for example, once in a while, not every reply).
+- No over-excited or cringe style.
 
-Capabilities:
-- Strong reasoning and explanation for study, tech, logic, and general topics.
-- When user asks for something visual (graph, diagram, chart), explain the picture in words AND, if useful,
-  provide a short Python code snippet or text description that could be used to generate a graph.
-- For images, you cannot generate the image yourself, but you can:
-  - describe the image in detail, and
-  - output a short image prompt the user could paste into an image model.
+Skills:
+- Explain study concepts, maths, science, logic and technology.
+- Help with planning (study routine, learning path).
+- Provide grounded, practical life advice.
+- When user asks for graphs/diagrams/images, describe them in words and optionally give short Python code or an image prompt.
 
-Memory:
-- You see the past messages in this conversation and should stay consistent with them.
-- Do not hallucinate personal details. Clarify if you are unsure.
-
-Safety:
-- Be respectful, neutral, and supportive.
-- If user is clearly sad or stressed, first acknowledge their feelings, then give calm, practical advice.
+Style:
+- Prefer short paragraphs and bullet points.
+- Be honest about uncertainty instead of guessing.
 """
 
-# ----------------
-# SESSION STATE SETUP
-# ----------------
-if "conversations" not in st.session_state:
-    # dict: chat_id -> list of {"role": "...", "content": "..."}
-    st.session_state.conversations = {}
-if "active_chat_id" not in st.session_state:
-    st.session_state.active_chat_id = "chat-1"
-if st.session_state.active_chat_id not in st.session_state.conversations:
-    st.session_state.conversations[st.session_state.active_chat_id] = []
+# -------------------
+# SESSION STATE
+# -------------------
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
 def new_chat():
-    chat_count = len(st.session_state.conversations) + 1
-    new_id = f"chat-{chat_count}"
-    st.session_state.conversations[new_id] = []
-    st.session_state.active_chat_id = new_id
+    st.session_state.messages = []
 
-def switch_chat(chat_id: str):
-    st.session_state.active_chat_id = chat_id
+# -------------------
+# CALL MODEL
+# -------------------
+def generate_xo_reply(history):
+    """history: list of {'role': 'user'/'assistant', 'content': '...'}"""
+    messages_for_model = [{"role": "system", "content": SYSTEM_PROMPT}]
+    messages_for_model.extend(history)
 
-# ----------------
-# MODEL CALL
-# ----------------
-def generate_xo_reply(messages):
-    """messages: list of dicts with role: system/user/assistant + content."""
     response = client.chat.completions.create(
         model=MODEL_NAME,
-        messages=messages,
+        messages=messages_for_model,
         temperature=0.4,
-        max_tokens=900,
+        max_tokens=700,
     )
     return response.choices[0].message.content.strip()
 
-# ---------------
-# SIDEBAR = CHAT LIST / OPTIONS
-# ---------------
-with st.sidebar:
-    st.markdown("### Nexo.corp")
-    st.markdown("**XO AI – Neon Edition**")
-    st.markdown(
-        "<span style='font-size:0.85rem; opacity:0.75;'>Advanced conversational assistant for study, tech, reasoning & ideas.</span>",
-        unsafe_allow_html=True,
-    )
-    st.markdown("---")
+# -------------------
+# HEADER (Grok style)
+# -------------------
+st.markdown(
+    """
+    <div class="header-wrap">
+        <div class="logo-circle">XO</div>
+        <div class="brand-title">XO AI</div>
+        <div class="brand-sub">Advanced conversational assistant by Nexo.corp</div>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
-    if st.button("➕ New chat", use_container_width=True):
+# Simple "New chat" button at top-right
+top_col1, top_col2 = st.columns([0.7, 0.3])
+with top_col2:
+    if st.button("New chat", use_container_width=True):
         new_chat()
-
-    st.markdown("##### Chats")
-    for chat_id in sorted(st.session_state.conversations.keys()):
-        label = f"Session {chat_id.split('-')[-1]}"
-        if st.button(("👉 " if chat_id == st.session_state.active_chat_id else "") + label, use_container_width=True, key=f"btn-{chat_id}"):
-            switch_chat(chat_id)
-
-    st.markdown("---")
-    st.markdown(
-        "<span style='font-size:0.75rem; opacity:0.65;'>Tip: Ask focused questions. For graphs, say for example: <code>Plot y = x^2 from -5 to 5 and explain the shape.</code></span>",
-        unsafe_allow_html=True,
-    )
-
-# ---------------
-# MAIN HEADER (NO HUGE HERO)
-# ---------------
-col_left, col_right = st.columns([0.75, 0.25])
-with col_left:
-    st.markdown("#### 🤖 XO AI")
-    st.markdown(
-        "<span style='font-size:0.9rem; opacity:0.75;'>Designed to answer clearly, think logically, and stay calm – like a professional AI analyst.</span>",
-        unsafe_allow_html=True,
-    )
-with col_right:
-    st.markdown(
-        "<div style='text-align:right; opacity:0.6; font-size:0.8rem;'>Built by <b>Nexo.corp</b></div>",
-        unsafe_allow_html=True,
-    )
 
 st.markdown("")
 
-# ---------------
-# CHAT DISPLAY
-# ---------------
-active_messages = st.session_state.conversations[st.session_state.active_chat_id]
+# -------------------
+# CHAT AREA
+# -------------------
+st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
 
-chat_container = st.container()
-with chat_container:
-    st.markdown("<div class='chat-container'>", unsafe_allow_html=True)
-    for msg in active_messages:
-        role = msg["role"]
-        content = msg["content"]
+for msg in st.session_state.messages:
+    role = msg["role"]
+    content = msg["content"]
 
-        if role == "user":
-            st.markdown("<div class='role-label'>You</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='user-bubble'>{content}</div>", unsafe_allow_html=True)
-        elif role == "assistant":
-            st.markdown("<div class='role-label'>XO AI</div>", unsafe_allow_html=True)
-            st.markdown(f"<div class='bot-bubble'>{content}</div>", unsafe_allow_html=True)
+    if role == "user":
+        st.markdown("<div class='role-label'>YOU</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='user-bubble'>{content}</div>", unsafe_allow_html=True)
+    elif role == "assistant":
+        st.markdown("<div class='role-label'>XO AI</div>", unsafe_allow_html=True)
+        st.markdown(f"<div class='bot-bubble'>{content}</div>", unsafe_allow_html=True)
 
-    st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("</div>", unsafe_allow_html=True)
 
-st.markdown("---")
-
-# ---------------
-# INPUT AREA
-# ---------------
-with st.form(key="chat-input", clear_on_submit=True):
-    user_input = st.text_area(
-        "Message XO AI...",
-        placeholder="Ask about concepts, reasoning, study help, or anything you're curious about.",
-        height=60,
+# -------------------
+# INPUT (Ask XO AI bar)
+# -------------------
+with st.form(key="chat-form", clear_on_submit=True):
+    # We fake a Grok-like bar by styling the container, but real input is normal text_input
+    st.markdown("<div class='input-wrap'>", unsafe_allow_html=True)
+    user_input = st.text_input(
+        "",
+        placeholder="Ask XO AI",
+        label_visibility="collapsed",
     )
-    submitted = st.form_submit_button("Send")
+    st.markdown("</div>", unsafe_allow_html=True)
+    submitted = st.form_submit_button("Send", use_container_width=True)
 
 if submitted and user_input.strip():
-    # Add user message
-    active_messages.append({"role": "user", "content": user_input.strip()})
+    st.session_state.messages.append({"role": "user", "content": user_input.strip()})
 
-    # Build messages for LLM (system + history + new user)
-    history_for_model = [{"role": "system", "content": SYSTEM_PROMPT}]
-    history_for_model.extend(active_messages)
-
-    # Typing indicator
     with st.spinner("XO AI is thinking..."):
-        reply = generate_xo_reply(history_for_model)
+        reply = generate_xo_reply(st.session_state.messages)
 
-    active_messages.append({"role": "assistant", "content": reply})
-
-    # Save back
-    st.session_state.conversations[st.session_state.active_chat_id] = active_messages
+    st.session_state.messages.append({"role": "assistant", "content": reply})
     st.rerun()
+
+# -------------------
+# FOOTER (Terms & Privacy)
+# -------------------
+st.markdown(
+    """
+    <div class="foot-note">
+        By messaging XO AI, you agree to our <b>Terms</b> and <b>Privacy Policy</b>.
+        (Add your real links here later.)
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
