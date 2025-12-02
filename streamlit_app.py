@@ -1,162 +1,115 @@
 import streamlit as st
-from groq import Groq
+from openai import OpenAI
 
-# -------------------
+# -------------------------
 # PAGE CONFIG
-# -------------------
+# -------------------------
 st.set_page_config(
     page_title="XO AI — Nexo.corp",
     page_icon="🤖",
-    layout="wide",
+    layout="wide"
 )
 
-# -------------------
-# GLOBAL STYLES (simple & professional)
-# -------------------
-st.markdown(
-    """
-    <style>
-    body, .stApp {
-        background-color: #050505;
-        color: #f5f5f5;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    }
+# -------------------------
+# OPENAI CLIENT
+# -------------------------
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+MODEL_NAME = "gpt-4o"
 
-    .block-container {
-        max-width: 900px;
-        padding-top: 1.2rem;
-        padding-bottom: 2rem;
-    }
-
-    /* Header */
-    .top-title {
-        font-size: 1.4rem;
-        font-weight: 600;
-        padding-bottom: 0.3rem;
-    }
-
-    /* Remove default footer + menu */
-    footer {visibility: hidden;}
-    #MainMenu {visibility: hidden;}
-
-    /* Chat input background tweak */
-    div[data-baseweb="textarea"] > textarea {
-        background: #111214 !important;
-        color: #ffffff !important;
-        border-radius: 8px !important;
-    }
-
-    /* Remove chat avatars (icons) */
-    [data-testid="stChatMessageAvatar"] {
-        display: none !important;
-    }
-
-    /* Remove left padding reserved for avatars */
-    [data-testid="stChatMessage"] > div:nth-child(2) {
-        padding-left: 0 !important;
-    }
-
-    /* Optional: subtle separation between messages */
-    [data-testid="stChatMessage"] {
-        margin-bottom: 0.35rem;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# -------------------
-# LLM CLIENT
-# -------------------
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-MODEL_NAME = "llama-3.1-8b-instant"
-
+# -------------------------
+# PROFESSIONAL SYSTEM PROMPT
+# -------------------------
 SYSTEM_PROMPT = """
-You are XO AI, an assistant created by Nexo.corp.
+You are XO AI, an advanced assistant created by Nexo.corp.
 
-Tone:
-- Calm, clear, mature.
-- Use emojis rarely, only when they truly add value.
-- No cringe or over-excited style.
-
-Skills:
-- Study help, explanations, reasoning, tech, maths, science.
-- Simple, practical life and productivity advice.
-- For graphs/diagrams/images, describe them in words; optionally give short Python code or image prompts.
-
-Style:
-- Short paragraphs and bullet points when helpful.
-- Be honest if unsure instead of guessing.
+Your qualities:
+- Professional, calm, accurate.
+- Emotion-aware; respond with empathy when needed.
+- Expert in all major fields: science, maths, coding, business, finance, psychology, productivity, daily life.
+- Give clean, structured, well-reasoned answers.
+- If unsure about something, admit uncertainty.
+- Use short paragraphs and bullet points when helpful.
+- Tone adjusts based on user emotion (friendly, calm, mature).
+- No cringe, no childish behaviour.
+- Be smart like ChatGPT + confident like Grok.
 """
 
-# -------------------
+# -------------------------
 # STATE
-# -------------------
+# -------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "hey, what’s up? 🙂"}
+        {"role": "assistant", "content": "Hello, I’m XO AI. How can I help you today?"}
     ]
 
 def new_chat():
     st.session_state.messages = [
-        {"role": "assistant", "content": "hey, what’s up? 🙂"}
+        {"role": "assistant", "content": "New chat started. How can XO assist you?"}
     ]
 
-# -------------------
-# MODEL CALL
-# -------------------
-def xo_reply(history):
-    msgs = [{"role": "system", "content": SYSTEM_PROMPT}]
-    msgs.extend(history)
-    res = client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=msgs,
-        temperature=0.4,
-        max_tokens=700,
-    )
-    return res.choices[0].message.content.strip()
+# -------------------------
+# STYLING (grey-black elegant)
+# -------------------------
+st.markdown("""
+<style>
+body, .stApp {
+    background: #050607;
+    color: #f5f5f5;
+    font-family: system-ui;
+}
+.block-container {
+    max-width: 900px;
+    padding-top: 1.2rem;
+    padding-bottom: 2rem;
+}
+header, #MainMenu, footer {visibility: hidden;}
 
-# -------------------
-# HEADER (ChatGPT-style simple top bar)
-# -------------------
+.chat-title {
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------
+# HEADER
+# -------------------------
 col1, col2 = st.columns([0.8, 0.2])
 with col1:
-    st.markdown('<div class="top-title">XO AI</div>', unsafe_allow_html=True)
+    st.markdown('<div class="chat-title">XO AI</div>', unsafe_allow_html=True)
 with col2:
     if st.button("New chat"):
         new_chat()
 
 st.divider()
 
-# -------------------
-# CHAT HISTORY (Streamlit chat UI)
-# -------------------
+# -------------------------
+# CHAT HISTORY UI
+# -------------------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# -------------------
-# INPUT (bottom, handled by Streamlit)
-# -------------------
-user_text = st.chat_input("Ask XO AI")
+# -------------------------
+# USER INPUT
+# -------------------------
+user_text = st.chat_input("Ask XO AI anything...")
 
 if user_text:
-    # Store + show user message
+    # show + store user msg
+    st.chat_message("user").markdown(user_text)
     st.session_state.messages.append({"role": "user", "content": user_text})
-    with st.chat_message("user"):
-        st.markdown(user_text)
 
-    # Get XO AI reply
+    # call GPT-4o
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
-            answer = xo_reply(st.session_state.messages)
-            st.markdown(answer)
+            response = client.chat.completions.create(
+                model=MODEL_NAME,
+                messages=[{"role": "system", "content": SYSTEM_PROMPT}] +
+                         st.session_state.messages
+            )
+            reply = response.choices[0].message.content
+            st.markdown(reply)
 
-    st.session_state.messages.append({"role": "assistant", "content": answer})
-
-# -------------------
-# FOOTER
-# -------------------
-st.markdown("---")
-st.caption("By messaging XO AI, you agree to our Terms and Privacy Policy.")
-st.caption("Founder: Dev • Nexo.corp")
+    # save bot reply
+    st.session_state.messages.append({"role": "assistant", "content": reply})
