@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # -------------------
-# BASIC STYLES (simple + clean)
+# GLOBAL STYLES (simple & professional)
 # -------------------
 st.markdown(
     """
@@ -28,21 +28,38 @@ st.markdown(
         padding-bottom: 2rem;
     }
 
-    /* header row */
+    /* Header */
     .top-title {
         font-size: 1.4rem;
         font-weight: 600;
         padding-bottom: 0.3rem;
     }
 
-    /* make chat_input a bit darker */
+    /* Remove default footer + menu */
+    footer {visibility: hidden;}
+    #MainMenu {visibility: hidden;}
+
+    /* Chat input background tweak */
     div[data-baseweb="textarea"] > textarea {
         background: #111214 !important;
         color: #ffffff !important;
+        border-radius: 8px !important;
     }
 
-    footer {visibility: hidden;}
-    #MainMenu {visibility: hidden;}
+    /* Remove chat avatars (icons) */
+    [data-testid="stChatMessageAvatar"] {
+        display: none !important;
+    }
+
+    /* Remove left padding reserved for avatars */
+    [data-testid="stChatMessage"] > div:nth-child(2) {
+        padding-left: 0 !important;
+    }
+
+    /* Optional: subtle separation between messages */
+    [data-testid="stChatMessage"] {
+        margin-bottom: 0.35rem;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -76,10 +93,14 @@ Style:
 # STATE
 # -------------------
 if "messages" not in st.session_state:
-    st.session_state.messages = []  # [{role, content}]
+    st.session_state.messages = [
+        {"role": "assistant", "content": "hey, what’s up? 🙂"}
+    ]
 
 def new_chat():
-    st.session_state.messages = []
+    st.session_state.messages = [
+        {"role": "assistant", "content": "hey, what’s up? 🙂"}
+    ]
 
 # -------------------
 # MODEL CALL
@@ -96,7 +117,7 @@ def xo_reply(history):
     return res.choices[0].message.content.strip()
 
 # -------------------
-# HEADER (like ChatGPT top bar)
+# HEADER (ChatGPT-style simple top bar)
 # -------------------
 col1, col2 = st.columns([0.8, 0.2])
 with col1:
@@ -108,25 +129,24 @@ with col2:
 st.divider()
 
 # -------------------
-# CHAT HISTORY (like ChatGPT)
+# CHAT HISTORY (Streamlit chat UI)
 # -------------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
 # -------------------
-# INPUT BOX (bottom, simple)
+# INPUT (bottom, handled by Streamlit)
 # -------------------
 user_text = st.chat_input("Ask XO AI")
 
 if user_text:
-    # show user msg
+    # Store + show user message
     st.session_state.messages.append({"role": "user", "content": user_text})
-
     with st.chat_message("user"):
         st.markdown(user_text)
 
-    # get bot reply
+    # Get XO AI reply
     with st.chat_message("assistant"):
         with st.spinner("Thinking..."):
             answer = xo_reply(st.session_state.messages)
@@ -135,7 +155,7 @@ if user_text:
     st.session_state.messages.append({"role": "assistant", "content": answer})
 
 # -------------------
-# FOOTER TAG
+# FOOTER
 # -------------------
 st.markdown("---")
 st.caption("By messaging XO AI, you agree to our Terms and Privacy Policy.")
