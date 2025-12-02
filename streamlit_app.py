@@ -240,4 +240,4 @@ if send and user_text.strip():
 
     # add assistant message
     st.session_state.messages.append({"role": "assistant", "content": reply})
-    st.experimental_rerun()
+    st.rerun()
