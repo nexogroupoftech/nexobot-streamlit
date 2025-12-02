@@ -1,39 +1,39 @@
 import streamlit as st
 from groq import Groq
 
-# ==============================
+# -----------------------------
 # PAGE CONFIG
-# ==============================
+# -----------------------------
 st.set_page_config(
     page_title="XO AI — Free Version",
     page_icon="🤖",
     layout="wide",
 )
 
-# ==============================
+# -----------------------------
 # GROQ CLIENT (FREE MODELS)
-# ==============================
+# -----------------------------
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
-# ==============================
+# -----------------------------
 # SYSTEM PROMPT
-# ==============================
+# -----------------------------
 SYSTEM_PROMPT = """
 You are XO AI, an advanced professional assistant created by Nexo.corp.
 
 Qualities:
 - Mature, calm, respectful.
 - Very strong at: academics, maths, coding, tech, business, psychology, productivity, and daily life.
-- Emotion-aware: if user is upset or stressed, respond with empathy first.
+- Emotion-aware: if the user is upset or stressed, respond with empathy first.
 - Give clear, structured answers with short paragraphs and bullet points when helpful.
 - Avoid cringe or childish language.
 - Prefer accuracy and honesty over guessing. If you are not fully sure, say so clearly.
 - Tone similar to ChatGPT: polite, helpful, and intelligent; adjust slightly to the user’s mood.
 """
 
-# ==============================
+# -----------------------------
 # SESSION STATE
-# ==============================
+# -----------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Hello, I’m XO AI. How can I help you today?"}
@@ -46,9 +46,9 @@ def new_chat():
     ]
 
 
-# ==============================
-# STYLES (grey-black, simple)
-# ==============================
+# -----------------------------
+# STYLES (custom chat UI)
+# -----------------------------
 st.markdown(
     """
 <style>
@@ -64,26 +64,97 @@ body, .stApp {
 }
 header, #MainMenu, footer {visibility: hidden;}
 
-/* Title */
+/* title */
 .chat-title {
     font-size: 1.5rem;
     font-weight: 600;
 }
 
-/* chat input darker */
-div[data-baseweb="textarea"] > textarea {
-    background: #111214 !important;
+/* chat panel */
+.chat-panel {
+    margin-top: 0.7rem;
+    background: #080a0f;
+    border-radius: 14px;
+    border: 1px solid #1f2933;
+    padding: 14px 16px;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
+}
+
+/* message rows */
+.msg-row {
+    display: flex;
+    margin-bottom: 8px;
+}
+.msg-row.assistant {
+    justify-content: flex-start;
+}
+.msg-row.user {
+    justify-content: flex-end;
+}
+
+/* bubbles */
+.bubble {
+    max-width: 78%;
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    word-wrap: break-word;
+}
+.bubble.assistant {
+    background: #111827;
+    border: 1px solid #1f2933;
+}
+.bubble.user {
+    background: #1f2937;
+    border: 1px solid #273549;
+}
+
+/* input card */
+.input-card {
+    margin-top: 1rem;
+    background: #080a0f;
+    border-radius: 999px;
+    border: 1px solid #1f2933;
+    padding: 6px 10px 6px 14px;
+}
+
+/* text input */
+div[data-baseweb="input"] {
+    background: transparent !important;
+    border: none !important;
+}
+div[data-baseweb="input"] > div {
+    background: transparent !important;
+    border: none !important;
+}
+div[data-baseweb="input"] input {
+    background: transparent !important;
     color: #f5f5f5 !important;
-    border-radius: 8px !important;
+    font-size: 0.95rem !important;
+}
+
+/* send button */
+.stButton>button {
+    border-radius: 999px;
+    border: 1px solid #3b82f6;
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 0.9rem;
+    padding: 0.3rem 1rem;
+}
+.stButton>button:hover {
+    filter: brightness(1.05);
 }
 </style>
 """,
     unsafe_allow_html=True,
 )
 
-# ==============================
+# -----------------------------
 # HEADER
-# ==============================
+# -----------------------------
 col1, col2 = st.columns([0.75, 0.25])
 with col1:
     st.markdown('<div class="chat-title">XO AI (Free)</div>', unsafe_allow_html=True)
@@ -93,9 +164,9 @@ with col2:
 
 st.divider()
 
-# ==============================
-# MODEL SELECTOR (all free)
-# ==============================
+# -----------------------------
+# MODEL SELECTOR (Groq free)
+# -----------------------------
 model_choice = st.selectbox(
     "Choose free Groq model:",
     [
@@ -112,40 +183,61 @@ MODEL_MAP = {
 }
 MODEL_NAME = MODEL_MAP[model_choice]
 
-# ==============================
-# SHOW CHAT HISTORY
-# ==============================
+# -----------------------------
+# CHAT PANEL (no st.chat_message, no faces)
+# -----------------------------
+st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
+
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
+    role = msg["role"]
+    cls = "user" if role == "user" else "assistant"
+    st.markdown(
+        f"""
+        <div class="msg-row {cls}">
+            <div class="bubble {cls}">
+                {msg["content"]}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
-# ==============================
-# USER INPUT
-# ==============================
-user_text = st.chat_input("Ask XO AI anything...")
+st.markdown("</div>", unsafe_allow_html=True)
 
-if user_text:
-    # store user message
-    st.session_state.messages.append({"role": "user", "content": user_text})
-    with st.chat_message("user"):
-        st.markdown(user_text)
+# -----------------------------
+# INPUT AREA
+# -----------------------------
+st.markdown('<div class="input-card">', unsafe_allow_html=True)
+with st.form("chat-input", clear_on_submit=True):
+    c1, c2 = st.columns([0.85, 0.15])
+    with c1:
+        user_text = st.text_input(
+            "",
+            placeholder="Ask XO AI anything...",
+            label_visibility="collapsed",
+        )
+    with c2:
+        send = st.form_submit_button("Send")
+st.markdown("</div>", unsafe_allow_html=True)
+
+# -----------------------------
+# HANDLE SEND
+# -----------------------------
+if send and user_text.strip():
+    content = user_text.strip()
+
+    # add user message
+    st.session_state.messages.append({"role": "user", "content": content})
 
     # call Groq
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            response = client.chat.completions.create(
-                model=MODEL_NAME,
-                messages=[{"role": "system", "content": SYSTEM_PROMPT}]
-                + st.session_state.messages,
-            )
-            reply = response.choices[0].message.content
-            st.markdown(reply)
+    with st.spinner("XO AI is thinking..."):
+        response = client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[{"role": "system", "content": SYSTEM_PROMPT}]
+            + st.session_state.messages,
+        )
+        reply = response.choices[0].message.content
 
-    # save reply
+    # add assistant message
     st.session_state.messages.append({"role": "assistant", "content": reply})
-
-# ==============================
-# FOOTER
-# ==============================
-st.markdown("---")
-st.caption("By using XO AI, you agree to basic Terms and Privacy practices.")
+    st.experimental_rerun()
