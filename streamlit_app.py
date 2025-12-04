@@ -1,9 +1,9 @@
 import streamlit as st
 from groq import Groq
+from datetime import datetime
 import html
 import json
 import streamlit.components.v1 as components
-from datetime import datetime
 
 # -----------------------------
 # PAGE CONFIG
@@ -70,19 +70,17 @@ def new_chat():
 
 
 # -----------------------------
-# STYLES (clean center chat)
+# STYLES (minimal, center chat)
 # -----------------------------
 st.markdown(
     """
 <style>
-/* App background */
 body, .stApp {
     background: #111215;
     color: #f5f5f5;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
-/* Main container */
 .block-container {
     max-width: 900px;
     padding-top: 1.4rem;
@@ -155,8 +153,6 @@ header, #MainMenu, footer {visibility: hidden;}
     justify-content: flex-end;
     margin-top: 3px;
 }
-
-/* Make copy button small & subtle */
 .copy-row .stButton>button {
     font-size: 0.7rem;
     padding: 2px 10px;
@@ -225,7 +221,7 @@ with top_right:
 st.markdown("<hr/>", unsafe_allow_html=True)
 
 # -----------------------------
-# MODEL SELECTOR (centered above chat)
+# MODEL SELECTOR
 # -----------------------------
 st.markdown('<div class="model-label">Choose free Groq model:</div>', unsafe_allow_html=True)
 model_choice = st.selectbox(
@@ -246,7 +242,7 @@ MODEL_MAP = {
 MODEL_NAME = MODEL_MAP[model_choice]
 
 # -----------------------------
-# CHAT PANEL (CENTER ONLY)
+# CHAT PANEL
 # -----------------------------
 st.markdown('<div class="chat-panel">', unsafe_allow_html=True)
 
@@ -259,7 +255,7 @@ for idx, msg in enumerate(st.session_state.messages):
     safe_text = format_msg(msg["content"])
     time_str = msg.get("time", "")
 
-    # message bubble + time
+    # bubble
     st.markdown(
         f"""
         <div class="msg-row {cls}">
@@ -272,28 +268,26 @@ for idx, msg in enumerate(st.session_state.messages):
         unsafe_allow_html=True,
     )
 
-    # small copy button only for assistant
+    # copy button for assistant only
     if role == "assistant":
         st.markdown('<div class="copy-row">', unsafe_allow_html=True)
-        copy_col = st.columns([1])[0]
-        with copy_col:
-            if st.button("📋 Copy", key=f"copy_{idx}"):
-                components.html(
-                    f"""
-                    <script>
-                    navigator.clipboard.writeText({json.dumps(msg["content"])});
-                    </script>
-                    """,
-                    height=0,
-                    width=0,
-                )
-                st.toast("Copied!")
-        st.markdown('</div>', unsafe_allow_html=True)
+        if st.button("📋 Copy", key=f"copy_{idx}"):
+            components.html(
+                f"""
+                <script>
+                navigator.clipboard.writeText({json.dumps(msg["content"])});
+                </script>
+                """,
+                height=0,
+                width=0,
+            )
+            st.toast("Copied!")
+        st.markdown("</div>", unsafe_allow_html=True)
 
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -----------------------------
-# INPUT AREA
+# INPUT
 # -----------------------------
 st.markdown('<div class="input-card">', unsafe_allow_html=True)
 with st.form("chat-input", clear_on_submit=True):
