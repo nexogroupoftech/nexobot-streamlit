@@ -1,16 +1,32 @@
 import os
 from typing import List, Dict
 
-import streamlit as st
+# Try to import Streamlit. If it's not installed (like in some sandboxes),
+# we avoid crashing with ModuleNotFoundError and instead show a clear
+# message when the script runs.
+try:
+    import streamlit as st
+    STREAMLIT_AVAILABLE = True
+except ModuleNotFoundError:
+    STREAMLIT_AVAILABLE = False
+
+    class _DummyStreamlit:
+        """Minimal stub so the module can be imported without Streamlit.
+
+        Any attempt to use Streamlit APIs will raise a clear, friendly
+        RuntimeError instead of a low-level ModuleNotFoundError.
+        """
+
+        def __getattr__(self, name):  # pragma: no cover
+            raise RuntimeError(
+                "Streamlit is required to run the XO AI web app.\n"
+                "Install it with: pip install streamlit\n"
+                "Then run: streamlit run xo_ai_app.py"
+            )
+
+    st = _DummyStreamlit()  # type: ignore[assignment]
+
 from groq import Groq
-
-
-# --- Page config ---
-st.set_page_config(
-    page_title="XO AI — Nexo.corp",
-    page_icon="🤖",
-    layout="wide",
-)
 
 
 # --- Mini CSS for dark theme, fade-up animation, hover effects ---
@@ -25,6 +41,11 @@ CUSTOM_CSS = """
     /* Hide default Streamlit header */
     header[data-testid="stHeader"] { 
         background: transparent; 
+    }
+
+    /* Hide default chat avatars (the faces) */
+    [data-testid="stChatMessageAvatar"] {
+        display: none !important;
     }
 
     /* Hero section */
@@ -234,9 +255,6 @@ CUSTOM_CSS = """
 """
 
 
-st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-
-
 # --- Helper functions ---
 
 MODES = [
@@ -320,7 +338,8 @@ def call_groq_chat(messages: List[Dict[str, str]], model: str) -> str:
             "GROQ_API_KEY is not set in the environment. Please configure it before using XO AI."
         )
 
-    client = Groq(api_key=api_key)
+    # Required Groq client usage
+    client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
     completion = client.chat.completions.create(
         model=model,
@@ -332,7 +351,21 @@ def call_groq_chat(messages: List[Dict[str, str]], model: str) -> str:
     return completion.choices[0].message.content.strip()
 
 
-# --- Main UI ---
+def setup_page() -> None:
+    """Configure the Streamlit page and inject custom CSS."""
+    if not STREAMLIT_AVAILABLE:
+        return
+
+    st.set_page_config(
+        page_title="XO AI — Nexo.corp",
+        page_icon="🤖",
+        layout="wide",
+    )
+
+    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+
+
+# --- Main UI rendering helpers ---
 
 
 def render_hero() -> None:
@@ -343,8 +376,7 @@ def render_hero() -> None:
             <div style="position: relative; z-index: 1;">
                 <div class="xo-hero-title">XO AI — Nexo Assistant</div>
                 <div class="xo-hero-subtitle">
-                    Built by Nexo.corp for students, creators, and young professionals.
-                </div>
+                    Built by Nexo.corp for students, creators, and young professionals.</div>
                 <div class="xo-status-pill">
                     <span class="xo-status-dot"></span>
                     <span>online</span>
@@ -368,7 +400,6 @@ def render_modes_sidebar() -> None:
         btn_label = f"{mode}"
         btn_class = "xo-mode-pill xo-mode-pill-selected" if is_selected else "xo-mode-pill"
 
-        # Wrap each button in HTML to get hover + selected styling
         col = st.container()
         with col:
             clicked = st.button(
@@ -376,7 +407,8 @@ def render_modes_sidebar() -> None:
                 key=f"mode_{mode}",
                 use_container_width=True,
             )
-        # Inject class for that button by matching its label
+
+        # Apply styling to the button via JS (best-effort)
         st.markdown(
             f"""
             <script>
@@ -394,7 +426,6 @@ def render_modes_sidebar() -> None:
         if clicked:
             st.session_state.selected_mode = mode
 
-        # Small description under each mode
         if mode == "Study Helper":
             caption = "Break down concepts and questions step-by-step."
         elif mode == "Idea Generator":
@@ -406,7 +437,6 @@ def render_modes_sidebar() -> None:
 
         st.markdown(f"<div class='xo-mode-caption'>{caption}</div>", unsafe_allow_html=True)
 
-    # XO AI identity box
     st.markdown(
         """
         <div class="xo-identity-box">
@@ -431,7 +461,6 @@ def render_chat_area(selected_model: str) -> None:
     """Left-hand chat area with history and input."""
     st.markdown("<div class='xo-chat-card'>", unsafe_allow_html=True)
 
-    # Show selected mode badge
     mode = st.session_state.selected_mode
     st.markdown(
         f"<div style='font-size:0.8rem; color:#9ca3af; margin-bottom:0.35rem;'>Mode: "
@@ -439,49 +468,60 @@ def render_chat_area(selected_model: str) -> None:
         unsafe_allow_html=True,
     )
 
-    # Display chat history
     for msg in st.session_state.messages:
         with st.chat_message("user" if msg["role"] == "user" else "assistant"):
             st.markdown(msg["content"])
 
-    # Chat input
     user_input = st.chat_input("Ask XO AI anything…")
 
     if user_input:
-        # Append user message to history
         st.session_state.messages.append({"role": "user", "content": user_input})
 
-        # Display new user message immediately
         with st.chat_message("user"):
             st.markdown(user_input)
 
-        # Call Groq API with spinner
         with st.chat_message("assistant"):
             with st.spinner("XO AI is thinking…"):
                 try:
                     messages = build_messages(user_input)
                     assistant_reply = call_groq_chat(messages, selected_model)
-                except Exception as e:  # noqa: F841
+                except RuntimeError as e:
+                    # Config / API key errors – show clearly
+                    st.error(str(e))
+                    return
+                except Exception as e:  # Any Groq / network / rate errors
                     st.error("XO AI hit a limit. Please try again in a moment.")
+                    # Optional small debug line so you can see what went wrong
+                    st.caption(f"Debug info: {e}")
                     return
 
             st.markdown(assistant_reply)
 
-        # Save assistant reply
         st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
+# --- Entry point ---
+
+
 def main() -> None:
+    """Run the XO AI Streamlit app, or show a hint if Streamlit is missing."""
+    if not STREAMLIT_AVAILABLE:
+        print(
+            "XO AI Streamlit app can't start because Streamlit is not installed.\n"
+            "Install it with: pip install streamlit\n"
+            "Then run: streamlit run xo_ai_app.py"
+        )
+        return
+
+    setup_page()
     init_session_state()
 
-    # Top hero
     render_hero()
 
     st.markdown("\n", unsafe_allow_html=True)
 
-    # Model selector (between Groq models)
     with st.expander("Model settings", expanded=False):
         selected_model = st.radio(
             "Choose Groq model",
@@ -490,8 +530,7 @@ def main() -> None:
             help="These models are served by Groq and used by XO AI.",
             horizontal=True,
         )
-    
-    # Layout: left chat, right modes
+
     left_col, right_col = st.columns([1.9, 1.1], gap="large")
 
     with left_col:
@@ -500,7 +539,6 @@ def main() -> None:
     with right_col:
         render_modes_sidebar()
 
-    # Footer
     st.markdown(
         """
         <div class="xo-footer">
@@ -509,6 +547,18 @@ def main() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+# --- Simple tests for helper logic (do not require full UI) ---
+
+
+def _test_get_mode_instructions() -> None:
+    """Basic tests to ensure mode instructions are generated correctly."""
+    for mode in MODES:
+        text = get_mode_instructions(mode)
+        assert isinstance(text, str)
+        assert "You are XO AI" in text
+        assert len(text) > 0
 
 
 if __name__ == "__main__":
