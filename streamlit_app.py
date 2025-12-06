@@ -1,32 +1,16 @@
 import os
 from typing import List, Dict
 
-# Try to import Streamlit. If it's not installed (like in some sandboxes),
-# we avoid crashing with ModuleNotFoundError and instead show a clear
-# message when the script runs.
-try:
-    import streamlit as st
-    STREAMLIT_AVAILABLE = True
-except ModuleNotFoundError:
-    STREAMLIT_AVAILABLE = False
-
-    class _DummyStreamlit:
-        """Minimal stub so the module can be imported without Streamlit.
-
-        Any attempt to use Streamlit APIs will raise a clear, friendly
-        RuntimeError instead of a low-level ModuleNotFoundError.
-        """
-
-        def __getattr__(self, name):  # pragma: no cover
-            raise RuntimeError(
-                "Streamlit is required to run the XO AI web app.\n"
-                "Install it with: pip install streamlit\n"
-                "Then run: streamlit run xo_ai_app.py"
-            )
-
-    st = _DummyStreamlit()  # type: ignore[assignment]
-
+import streamlit as st
 from groq import Groq
+
+
+# --- Page config ---
+st.set_page_config(
+    page_title="XO AI — Nexo.corp",
+    page_icon="🤖",
+    layout="wide",
+)
 
 
 # --- Mini CSS for dark theme, fade-up animation, hover effects ---
@@ -39,13 +23,20 @@ CUSTOM_CSS = """
     }
 
     /* Hide default Streamlit header */
-    header[data-testid="stHeader"] { 
-        background: transparent; 
+    header[data-testid="stHeader"] {
+        background: transparent;
     }
 
-    /* Hide default chat avatars (the faces) */
+    /* Hide default chat avatars (the round faces) */
     [data-testid="stChatMessageAvatar"] {
         display: none !important;
+    }
+
+    /* Layout spacing */
+    .block-container {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+        max-width: 1200px !important;
     }
 
     /* Hero section */
@@ -108,13 +99,6 @@ CUSTOM_CSS = """
         opacity: 0.8;
     }
 
-    /* Layout spacing */
-    .block-container {
-        padding-top: 1.5rem !important;
-        padding-bottom: 1.5rem !important;
-        max-width: 1200px !important;
-    }
-
     /* Chat container */
     .xo-chat-card {
         padding: 0.75rem 0.9rem;
@@ -143,35 +127,11 @@ CUSTOM_CSS = """
         margin-bottom: 0.6rem;
     }
 
-    .xo-mode-pill {
-        border-radius: 999px !important;
-        border: 1px solid rgba(75, 85, 99, 0.9) !important;
-        padding: 0.4rem 0.75rem !important;
-        font-size: 0.78rem !important;
-        font-weight: 500 !important;
-        background: rgba(17, 24, 39, 0.85) !important;
-        transition: transform 0.16s ease-out, box-shadow 0.16s ease-out, border-color 0.16s ease-out, background 0.16s ease-out;
-        cursor: pointer;
-        width: 100%;
-    }
-
-    .xo-mode-pill:hover {
-        transform: translateY(-1px) scale(1.01);
-        box-shadow: 0 16px 40px rgba(56, 189, 248, 0.25);
-        border-color: rgba(96, 165, 250, 0.9) !important;
-        background: rgba(15, 23, 42, 0.95) !important;
-    }
-
-    .xo-mode-pill-selected {
-        border-color: #4f46e5 !important;
-        background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.25), rgba(15, 23, 42, 0.95));
-        box-shadow: 0 18px 45px rgba(129, 140, 248, 0.4);
-    }
-
     .xo-mode-caption {
         font-size: 0.72rem;
         color: #9ca3af;
         margin-top: 0.15rem;
+        margin-bottom: 0.15rem;
     }
 
     /* XO identity box */
@@ -254,8 +214,10 @@ CUSTOM_CSS = """
 </style>
 """
 
+st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-# --- Helper functions ---
+
+# --- Modes & model mapping ---
 
 MODES = [
     "Study Helper",
@@ -263,6 +225,12 @@ MODES = [
     "Planner",
     "Friendly Chat",
 ]
+
+# Map UI labels to current Groq model IDs
+MODEL_ID_MAP = {
+    "mixtral-8x7b-32768": "mistral-saba-24b",        # replacement for Mixtral 8x7B
+    "llama3-70b-8192": "llama-3.3-70b-versatile",   # replacement for Llama3 70B
+}
 
 
 def init_session_state() -> None:
@@ -275,7 +243,7 @@ def init_session_state() -> None:
 
 
 def get_mode_instructions(mode: str) -> str:
-    """Return mode-specific guidance that is appended to the system prompt."""
+    """Return mode-specific guidance for the system prompt."""
     base_rules = (
         "You are XO AI, the official assistant of Nexo.corp. "
         "Your tone is calm, clear, and respectful. "
@@ -283,40 +251,38 @@ def get_mode_instructions(mode: str) -> str:
         "For study questions, you explain step-by-step. "
         "You must not give trading, stock market, crypto, or other financial advice. "
         "You must refuse harmful, unsafe, or adult content. "
-        "Keep answers concise and focused unless the user explicitly asks for a longer or very detailed answer. "
+        "Keep answers concise and focused unless the user explicitly asks for a much longer answer. "
     )
-
-    mode_text = ""
 
     if mode == "Study Helper":
         mode_text = (
-            "Act as a friendly Study Helper for school and college-style topics. "
-            "Break problems into steps and show reasoning in a simple way. "
-            "Encourage the student, but do not do full homework or full exam papers for them."
+            "Act as a friendly Study Helper. "
+            "Break problems into clear steps and show reasoning in a simple way. "
+            "Encourage the student but do not do full homework or full exam papers for them."
         )
     elif mode == "Idea Generator":
         mode_text = (
             "Act as a creative Idea Generator. "
-            "Brainstorm lists of ideas for content, projects, startups, goals, or improvements. "
-            "Be practical and realistic, and give examples."
+            "Brainstorm ideas for content, projects, startups, and goals. "
+            "Be practical and realistic, and include examples."
         )
     elif mode == "Planner":
         mode_text = (
             "Act as a planning assistant. "
-            "Help the user design timetables, study plans, routines, and simple roadmaps. "
+            "Design study plans, routines, and simple roadmaps. "
             "Keep plans realistic for a busy student or young professional."
         )
     else:  # Friendly Chat
         mode_text = (
             "Act as a calm and positive friend for normal chat. "
-            "You can talk about life, school, mindset, and self-improvement without being dramatic."
+            "Talk about life, school, mindset, and self-improvement without being dramatic."
         )
 
     return base_rules + " " + mode_text
 
 
 def build_messages(user_input: str) -> List[Dict[str, str]]:
-    """Build full message list for the Groq ChatCompletion API."""
+    """Build message list for Groq ChatCompletion."""
     system_prompt = get_mode_instructions(st.session_state.selected_mode)
 
     messages: List[Dict[str, str]] = [
@@ -330,8 +296,12 @@ def build_messages(user_input: str) -> List[Dict[str, str]]:
     return messages
 
 
-def call_groq_chat(messages: List[Dict[str, str]], model: str) -> str:
-    """Call Groq Chat Completions and return assistant text."""
+def call_groq_chat(messages: List[Dict[str, str]], ui_model_name: str) -> str:
+    """Call Groq ChatCompletions and return text.
+
+    ui_model_name is the label selected in the UI, which we
+    map to a real Groq model ID via MODEL_ID_MAP.
+    """
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError(
@@ -341,8 +311,11 @@ def call_groq_chat(messages: List[Dict[str, str]], model: str) -> str:
     # Required Groq client usage
     client = Groq(api_key=os.environ["GROQ_API_KEY"])
 
+    # Map UI model to real Groq id (handles deprecations)
+    groq_model_id = MODEL_ID_MAP.get(ui_model_name, ui_model_name)
+
     completion = client.chat.completions.create(
-        model=model,
+        model=groq_model_id,
         messages=messages,
         temperature=0.4,
         max_tokens=1024,
@@ -351,21 +324,7 @@ def call_groq_chat(messages: List[Dict[str, str]], model: str) -> str:
     return completion.choices[0].message.content.strip()
 
 
-def setup_page() -> None:
-    """Configure the Streamlit page and inject custom CSS."""
-    if not STREAMLIT_AVAILABLE:
-        return
-
-    st.set_page_config(
-        page_title="XO AI — Nexo.corp",
-        page_icon="🤖",
-        layout="wide",
-    )
-
-    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
-
-
-# --- Main UI rendering helpers ---
+# --- UI sections ---
 
 
 def render_hero() -> None:
@@ -376,7 +335,8 @@ def render_hero() -> None:
             <div style="position: relative; z-index: 1;">
                 <div class="xo-hero-title">XO AI — Nexo Assistant</div>
                 <div class="xo-hero-subtitle">
-                    Built by Nexo.corp for students, creators, and young professionals.</div>
+                    Built by Nexo.corp for students, creators, and young professionals.
+                </div>
                 <div class="xo-status-pill">
                     <span class="xo-status-dot"></span>
                     <span>online</span>
@@ -391,52 +351,32 @@ def render_hero() -> None:
 
 
 def render_modes_sidebar() -> None:
-    """Right-hand side quick modes + identity box."""
+    """Right side quick modes + XO identity."""
     st.markdown("<div class='xo-modes-card'>", unsafe_allow_html=True)
     st.markdown("<div class='xo-modes-title'>Quick modes</div>", unsafe_allow_html=True)
 
-    for mode in MODES:
-        is_selected = st.session_state.selected_mode == mode
-        btn_label = f"{mode}"
-        btn_class = "xo-mode-pill xo-mode-pill-selected" if is_selected else "xo-mode-pill"
+    # Use radio for clean mode selection
+    selected = st.radio(
+        "",
+        MODES,
+        index=MODES.index(st.session_state.selected_mode),
+        label_visibility="collapsed",
+    )
+    st.session_state.selected_mode = selected
 
-        col = st.container()
-        with col:
-            clicked = st.button(
-                btn_label,
-                key=f"mode_{mode}",
-                use_container_width=True,
-            )
+    # Mode descriptions
+    descriptions = {
+        "Study Helper": "Break down concepts and questions step-by-step.",
+        "Idea Generator": "Brainstorm content, project, and business ideas.",
+        "Planner": "Design routines, timetables, and simple roadmaps.",
+        "Friendly Chat": "Normal conversation, mindset, and life chat.",
+    }
+    st.markdown(
+        f"<div class='xo-mode-caption'>{descriptions.get(selected, '')}</div>",
+        unsafe_allow_html=True,
+    )
 
-        # Apply styling to the button via JS (best-effort)
-        st.markdown(
-            f"""
-            <script>
-            const btns = Array.from(window.parent.document.querySelectorAll('button'));
-            btns.forEach(b => {{
-                if (b.innerText.trim() === "{btn_label}") {{
-                    b.className = '{btn_class}';
-                }}
-            }});
-            </script>
-            """,
-            unsafe_allow_html=True,
-        )
-
-        if clicked:
-            st.session_state.selected_mode = mode
-
-        if mode == "Study Helper":
-            caption = "Break down concepts and questions step-by-step."
-        elif mode == "Idea Generator":
-            caption = "Brainstorm content, project, and business ideas."
-        elif mode == "Planner":
-            caption = "Design routines, timetables, and simple roadmaps."
-        else:
-            caption = "Normal conversation, mindset, and life chat."
-
-        st.markdown(f"<div class='xo-mode-caption'>{caption}</div>", unsafe_allow_html=True)
-
+    # XO AI identity box
     st.markdown(
         """
         <div class="xo-identity-box">
@@ -468,10 +408,12 @@ def render_chat_area(selected_model: str) -> None:
         unsafe_allow_html=True,
     )
 
+    # History
     for msg in st.session_state.messages:
         with st.chat_message("user" if msg["role"] == "user" else "assistant"):
             st.markdown(msg["content"])
 
+    # Input
     user_input = st.chat_input("Ask XO AI anything…")
 
     if user_input:
@@ -489,39 +431,31 @@ def render_chat_area(selected_model: str) -> None:
                     # Config / API key errors – show clearly
                     st.error(str(e))
                     return
-                except Exception as e:  # Any Groq / network / rate errors
+                except Exception as e:  # Groq / network / rate-limit errors
                     st.error("XO AI hit a limit. Please try again in a moment.")
-                    # Optional small debug line so you can see what went wrong
                     st.caption(f"Debug info: {e}")
                     return
 
             st.markdown(assistant_reply)
 
-        st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+        st.session_state.messages.append(
+            {"role": "assistant", "content": assistant_reply}
+        )
 
     st.markdown("</div>", unsafe_allow_html=True)
 
 
-# --- Entry point ---
+# --- Main ---
 
 
 def main() -> None:
-    """Run the XO AI Streamlit app, or show a hint if Streamlit is missing."""
-    if not STREAMLIT_AVAILABLE:
-        print(
-            "XO AI Streamlit app can't start because Streamlit is not installed.\n"
-            "Install it with: pip install streamlit\n"
-            "Then run: streamlit run xo_ai_app.py"
-        )
-        return
-
-    setup_page()
     init_session_state()
 
     render_hero()
 
     st.markdown("\n", unsafe_allow_html=True)
 
+    # Model selector (UI labels, mapped internally)
     with st.expander("Model settings", expanded=False):
         selected_model = st.radio(
             "Choose Groq model",
@@ -549,17 +483,6 @@ def main() -> None:
     )
 
 
-# --- Simple tests for helper logic (do not require full UI) ---
-
-
-def _test_get_mode_instructions() -> None:
-    """Basic tests to ensure mode instructions are generated correctly."""
-    for mode in MODES:
-        text = get_mode_instructions(mode)
-        assert isinstance(text, str)
-        assert "You are XO AI" in text
-        assert len(text) > 0
-
-
 if __name__ == "__main__":
     main()
+
