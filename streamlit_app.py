@@ -4,7 +4,6 @@ from typing import List, Dict
 import streamlit as st
 from groq import Groq
 
-
 # ---------- PAGE CONFIG ----------
 st.set_page_config(
     page_title="XO AI — Nexo.corp",
@@ -12,8 +11,7 @@ st.set_page_config(
     layout="wide",
 )
 
-
-# ---------- GLOBAL CSS (CHATGPT-LIKE, NO FACES) ----------
+# ---------- GLOBAL CSS (CHATGPT-LIKE, NO FACES, NO BIG BLUE SPACE) ----------
 CUSTOM_CSS = """
 <style>
     .stApp {
@@ -87,7 +85,7 @@ CUSTOM_CSS = """
         box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.30);
     }
 
-    /* CHAT WRAPPER (NO STREAMLIT AVATARS, PURE CUSTOM) */
+    /* CHAT WRAPPER - auto height (no giant empty space) */
     .xo-chat-wrapper {
         padding: 0.75rem 0.9rem 0.9rem 0.9rem;
         border-radius: 1.25rem;
@@ -97,8 +95,8 @@ CUSTOM_CSS = """
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
-        height: 65vh;
         max-height: 65vh;
+        min-height: 220px;
     }
 
     .xo-chat-scroll {
@@ -112,13 +110,8 @@ CUSTOM_CSS = """
         margin-bottom: 0.35rem;
     }
 
-    .xo-msg-row.user {
-        justify-content: flex-end;
-    }
-
-    .xo-msg-row.assistant {
-        justify-content: flex-start;
-    }
+    .xo-msg-row.user { justify-content: flex-end; }
+    .xo-msg-row.assistant { justify-content: flex-start; }
 
     .xo-msg-bubble {
         max-width: 80%;
@@ -146,26 +139,7 @@ CUSTOM_CSS = """
         margin-bottom: 0.15rem;
     }
 
-    /* INPUT BAR (CHATGPT-LIKE) */
-    .xo-input-bar {
-        margin-top: 0.55rem;
-        border-radius: 999px;
-        border: 1px solid rgba(55, 65, 81, 0.9);
-        background: rgba(15, 23, 42, 0.98);
-        padding: 0.3rem 0.4rem 0.35rem 0.8rem;
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        box-shadow: 0 18px 45px rgba(15, 23, 42, 1);
-    }
-
-    .xo-input-hint {
-        font-size: 0.7rem;
-        color: #6b7280;
-        margin-top: 0.25rem;
-    }
-
-    /* QUICK MODES CARD */
+    /* QUICK MODES */
     .xo-modes-card {
         padding: 0.8rem 0.9rem 0.9rem 0.9rem;
         border-radius: 1.25rem;
@@ -221,7 +195,6 @@ CUSTOM_CSS = """
 
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
-
 # ---------- MODES & GROQ MODEL MAPPING ----------
 
 MODES = [
@@ -231,7 +204,7 @@ MODES = [
     "Friendly Chat",
 ]
 
-# UI labels -> real Groq models (current free/standard ones)
+# UI labels -> real Groq models
 MODEL_ID_MAP = {
     "llama3-8b-8192": "llama-3.1-8b-instant",
     "llama3-70b-8192": "llama-3.3-70b-versatile",
@@ -240,7 +213,6 @@ MODEL_ID_MAP = {
 
 def init_session_state() -> None:
     if "messages" not in st.session_state:
-        # each msg: {"role": "user"|"assistant", "content": str}
         st.session_state.messages: List[Dict[str, str]] = []
     if "selected_mode" not in st.session_state:
         st.session_state.selected_mode = "Friendly Chat"
@@ -301,15 +273,11 @@ def get_groq_client() -> Groq:
     api_key = os.environ.get("GROQ_API_KEY")
     if not api_key:
         raise RuntimeError("GROQ_API_KEY is not set. Set it before using XO AI.")
-
-    # pattern you requested
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
-    return client
+    return Groq(api_key=os.environ["GROQ_API_KEY"])
 
 
 def call_groq(messages: List[Dict[str, str]], ui_model: str) -> str:
     client = get_groq_client()
-
     groq_model_id = MODEL_ID_MAP.get(ui_model, ui_model)
 
     completion = client.chat.completions.create(
@@ -338,7 +306,7 @@ def render_hero() -> None:
                     <span class="xo-status-dot"></span>
                     <span>online</span>
                     <span style="opacity:0.35;">•</span>
-                    <span class="xo-status-powered">powered by Groq</span>
+                    <span>powered by Groq</span>
                 </div>
             </div>
         </div>
@@ -392,33 +360,35 @@ def render_modes_sidebar() -> None:
 
 
 def render_chat_area(selected_model: str) -> None:
-    # Wrapper div for chat
+    # Outer wrapper
     st.markdown("<div class='xo-chat-wrapper'>", unsafe_allow_html=True)
 
-    # Scroll area with custom HTML bubbles (NO st.chat_message, so no faces)
-    chat_html_parts: List[str] = ["<div class='xo-chat-scroll'>"]
+    # Scrollable area with custom bubbles
+    html_parts: List[str] = ["<div class='xo-chat-scroll'>"]
 
     for m in st.session_state.messages:
         role = m["role"]
         content = m["content"]
         cls = "user" if role == "user" else "assistant"
         label = "You" if role == "user" else "XO AI"
-        # Escape basic HTML chars
-        safe_content = content.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-        chat_html_parts.append(
+        safe = (
+            content.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
+        html_parts.append(
             f"<div class='xo-msg-row {cls}'>"
             f"  <div class='xo-msg-bubble {cls}'>"
             f"    <div class='xo-msg-label'>{label}</div>"
-            f"    <div>{safe_content}</div>"
+            f"    <div>{safe}</div>"
             f"  </div>"
             f"</div>"
         )
 
-    chat_html_parts.append("</div>")  # close xo-chat-scroll
+    html_parts.append("</div>")
+    st.markdown("\n".join(html_parts), unsafe_allow_html=True)
 
-    st.markdown("\n".join(chat_html_parts), unsafe_allow_html=True)
-
-    # Input bar at bottom (we still use st.chat_input for good UX, but it does NOT create faces)
+    # Input (no experimental_rerun, Streamlit will rerun automatically)
     user_input = st.chat_input("Ask XO AI anything…")
 
     if user_input:
@@ -427,10 +397,10 @@ def render_chat_area(selected_model: str) -> None:
         with st.spinner("XO AI is thinking…"):
             try:
                 msgs = build_messages(user_input)
-                assistant_reply = call_groq(msgs, selected_model)
+                reply = call_groq(msgs, selected_model)
             except RuntimeError as e:
                 st.error(str(e))
-                st.markdown("</div>", unsafe_allow_html=True)  # close wrapper
+                st.markdown("</div>", unsafe_allow_html=True)
                 return
             except Exception as e:
                 st.error("XO AI hit a limit. Please try again in a moment.")
@@ -438,12 +408,9 @@ def render_chat_area(selected_model: str) -> None:
                 st.markdown("</div>", unsafe_allow_html=True)
                 return
 
-        st.session_state.messages.append({"role": "assistant", "content": assistant_reply})
+        st.session_state.messages.append({"role": "assistant", "content": reply})
 
-        # Re-render after new messages so bubbles show immediately
-        st.experimental_rerun()
-
-    st.markdown("</div>", unsafe_allow_html=True)  # close xo-chat-wrapper
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # ---------- MAIN ----------
@@ -464,12 +431,12 @@ def main() -> None:
             horizontal=True,
         )
 
-    left_col, right_col = st.columns([1.9, 1.1], gap="large")
+    left, right = st.columns([1.9, 1.1], gap="large")
 
-    with left_col:
+    with left:
         render_chat_area(selected_model)
 
-    with right_col:
+    with right:
         render_modes_sidebar()
 
     st.markdown(
