@@ -1,4 +1,5 @@
 import os
+import time
 import streamlit as st
 from groq import Groq
 
@@ -13,66 +14,70 @@ st.set_page_config(
 CUSTOM_CSS = """
 <style>
 .stApp {
-    background: radial-gradient(circle at top left, #151b2b 0, #050816 40%, #02010a 100%);
-    color: #f9fafb;
+    background: linear-gradient(135deg, #0b1020, #050816);
+    color: #e5e7eb;
 }
 
 header[data-testid="stHeader"] { background: transparent; }
 
 .block-container {
-    max-width: 1200px;
-    padding-top: 1.5rem;
+    max-width: 1100px;
+    padding-top: 1.2rem;
 }
 
-/* Chat wrapper */
-.xo-chat-wrapper {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-}
+/* Chat */
+.xo-chat-wrapper { background: transparent; }
 
-/* Message layout */
-.xo-msg-row { display: flex; margin-bottom: 0.5rem; }
+/* Messages */
+.xo-msg-row { display: flex; margin-bottom: 0.6rem; }
 .xo-msg-row.user { justify-content: flex-end; }
 .xo-msg-row.assistant { justify-content: flex-start; }
 
 .xo-msg-bubble {
-    max-width: 80%;
-    padding: 0.65rem 0.85rem;
-    border-radius: 0.9rem;
+    max-width: 78%;
+    padding: 0.7rem 0.9rem;
+    border-radius: 14px;
     font-size: 0.9rem;
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 .xo-msg-bubble.user {
-    background: rgba(59,130,246,0.35);
-    border: 1px solid rgba(59,130,246,0.8);
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
 }
 
 .xo-msg-bubble.assistant {
-    background: rgba(31,41,55,0.9);
-    border: 1px solid rgba(75,85,99,0.8);
+    background: #111827;
+    border: 1px solid #1f2937;
 }
 
 .xo-msg-label {
-    font-size: 0.7rem;
-    text-transform: uppercase;
+    font-size: 0.65rem;
     letter-spacing: 0.08em;
-    color: #9ca3af;
-    margin-bottom: 0.15rem;
+    opacity: 0.7;
+    margin-bottom: 0.2rem;
 }
 
-/* Typing animation */
-.xo-typing {
-    font-size: 0.85rem;
-    color: #9ca3af;
-    animation: blink 1.4s infinite both;
+/* Meta bar */
+.xo-meta {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 0.6rem;
 }
 
-@keyframes blink {
-    0% { opacity: .2; }
-    20% { opacity: 1; }
-    100% { opacity: .2; }
+/* Buttons */
+.xo-btn {
+    cursor: pointer;
+    font-size: 0.65rem;
+    opacity: 0.75;
+}
+.xo-btn:hover { opacity: 1; }
+
+/* Auto scroll */
+#scroll-anchor {
+    height: 1px;
 }
 </style>
 """
@@ -80,40 +85,56 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ================= CONSTANTS =================
 FAST_MODEL = "llama-3.1-8b-instant"
-MAX_HISTORY = 6
 MAX_TOKENS = 250
+MAX_HISTORY = 6
 
 # ================= STATE =================
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# ================= GROQ CLIENT =================
+if "memory_on" not in st.session_state:
+    st.session_state.memory_on = True
+
+if "last_user_prompt" not in st.session_state:
+    st.session_state.last_user_prompt = None
+
+# ================= GROQ =================
 def groq_client():
     return Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# ================= SYSTEM PROMPT =================
+# ================= PROMPT =================
 def system_prompt():
     return (
         "You are XO AI from Nexo.corp. "
-        "Be calm, simple, respectful, and clear. "
-        "Give short helpful answers. "
-        "Explain step-by-step only when needed."
+        "Calm, helpful, clear. "
+        "Short answers unless user asks deep."
     )
 
-# ================= CHAT UI =================
+# ================= CHAT =================
 def render_chat():
     st.markdown("<div class='xo-chat-wrapper'>", unsafe_allow_html=True)
 
-    # Show chat history
-    for m in st.session_state.messages:
+    # Render history
+    for i, m in enumerate(st.session_state.messages):
         role = m["role"]
         label = "You" if role == "user" else "XO AI"
+
+        meta = ""
+        if role == "assistant" and "time" in m:
+            meta = f"""
+            <div class="xo-meta">
+                <span>{m["time"]} ms</span>
+                <span class="xo-btn" onclick="navigator.clipboard.writeText(`{m['content']}`)">Copy</span>
+            </div>
+            """
+
         st.markdown(
             f"""
-            <div class='xo-msg-row {role}'>
-                <div class='xo-msg-bubble {role}'>
-                    <div class='xo-msg-label'>{label}</div>
+            <div class="xo-msg-row {role}">
+                <div class="xo-msg-bubble {role}">
+                    <div class="xo-msg-label">{label}</div>
                     {m["content"]}
+                    {meta}
                 </div>
             </div>
             """,
@@ -123,76 +144,68 @@ def render_chat():
     user_input = st.chat_input("Ask XO AI...")
 
     if user_input:
-        # Save user message
+        st.session_state.last_user_prompt = user_input
         st.session_state.messages.append(
             {"role": "user", "content": user_input}
         )
 
-        messages = (
-            [{"role": "system", "content": system_prompt()}]
-            + st.session_state.messages[-MAX_HISTORY:]
-        )
+        history = st.session_state.messages
+        if st.session_state.memory_on:
+            history = history[-MAX_HISTORY:]
+        else:
+            history = history[-1:]
 
-        # Typing animation
-        typing_box = st.empty()
-        typing_box.markdown(
-            """
-            <div class='xo-msg-row assistant'>
-                <div class='xo-msg-bubble assistant'>
-                    <div class='xo-msg-label'>XO AI</div>
-                    <div class='xo-typing'>Typing...</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        messages = [{"role": "system", "content": system_prompt()}] + history
 
-        reply_box = st.empty()
+        assistant_box = st.empty()
         reply = ""
+        start_time = time.time()
 
-        try:
-            stream = groq_client().chat.completions.create(
-                model=FAST_MODEL,
-                messages=messages,
-                max_tokens=MAX_TOKENS,
-                stream=True
-            )
+        stream = groq_client().chat.completions.create(
+            model=FAST_MODEL,
+            messages=messages,
+            max_tokens=MAX_TOKENS,
+            stream=True,
+        )
 
-            for chunk in stream:
-                if chunk.choices[0].delta.content:
-                    reply += chunk.choices[0].delta.content
-                    reply_box.markdown(
-                        f"""
-                        <div class='xo-msg-row assistant'>
-                            <div class='xo-msg-bubble assistant'>
-                                <div class='xo-msg-label'>XO AI</div>
-                                {reply}
-                            </div>
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                reply += chunk.choices[0].delta.content
+                assistant_box.markdown(
+                    f"""
+                    <div class="xo-msg-row assistant">
+                        <div class="xo-msg-bubble assistant">
+                            <div class="xo-msg-label">XO AI</div>
+                            {reply}
                         </div>
-                        """,
-                        unsafe_allow_html=True
-                    )
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-            typing_box.empty()
+        elapsed = int((time.time() - start_time) * 1000)
 
-            st.session_state.messages.append(
-                {"role": "assistant", "content": reply}
-            )
+        st.session_state.messages.append(
+            {"role": "assistant", "content": reply, "time": elapsed}
+        )
 
-        except Exception as e:
-            typing_box.empty()
-            st.error("XO AI is busy. Please try again.")
-            st.caption(str(e))
-
+    st.markdown('<div id="scroll-anchor"></div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ================= MAIN =================
-def main():
-    with st.sidebar:
-        st.markdown("### ⚙️ XO AI")
-        if st.button("Clear chat"):
-            st.session_state.messages = []
+# ================= SIDEBAR =================
+with st.sidebar:
+    st.markdown("### ⚙️ XO AI Controls")
+    st.toggle("Memory ON", key="memory_on")
+    if st.button("🔁 Regenerate"):
+        if st.session_state.last_user_prompt:
+            st.session_state.messages = st.session_state.messages[:-1]
+            st.session_state.messages.append(
+                {"role": "user", "content": st.session_state.last_user_prompt}
+            )
+            st.experimental_rerun()
 
-    render_chat()
+    if st.button("🧹 Clear Chat"):
+        st.session_state.messages = []
 
-main()
+# ================= RUN =================
+render_chat()
