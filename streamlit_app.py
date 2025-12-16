@@ -31,6 +31,11 @@ if "welcome_shown" not in st.session_state:
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 MODEL = "llama-3.1-8b-instant"
 
+SYSTEM_MESSAGE = {
+    "role": "system",
+    "content": "You are DrakFury AI. Calm, fast, precise. Answer clearly."
+}
+
 # ================= HEADER =================
 st.markdown("<h2 style='text-align:center'>🐉 DrakFury AI</h2>", unsafe_allow_html=True)
 
@@ -45,7 +50,7 @@ if not st.session_state.welcome_shown:
     })
     st.session_state.welcome_shown = True
 
-# ================= CHAT HISTORY =================
+# ================= CHAT DISPLAY =================
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
@@ -60,17 +65,27 @@ if user_input:
         "content": user_input
     })
 
+    # 🔥 BUILD SAFE PAYLOAD FOR GROQ
+    groq_messages = [SYSTEM_MESSAGE] + [
+        {
+            "role": m["role"],
+            "content": str(m["content"])
+        }
+        for m in st.session_state.messages
+        if m["role"] in ("user", "assistant")
+    ]
+
     with st.chat_message("assistant"):
         with st.spinner("DrakFury is thinking…"):
             response = client.chat.completions.create(
                 model=MODEL,
-                messages=st.session_state.messages,
+                messages=groq_messages,
                 max_tokens=250
             )
             reply = response.choices[0].message.content
             st.write(reply)
 
-    # add assistant reply (ONLY role + content)
+    # save assistant reply
     st.session_state.messages.append({
         "role": "assistant",
         "content": reply
