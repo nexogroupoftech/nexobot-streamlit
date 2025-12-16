@@ -5,16 +5,16 @@ from groq import Groq
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="DrakFury AI — Nexo.corp",
-    page_icon="🐉",
+    page_title="XO AI — Nexo.corp",
+    page_icon="🤖",
     layout="wide"
 )
 
-# ================= NIGHT FURY UI =================
+# ================= CSS =================
 CUSTOM_CSS = """
 <style>
 .stApp {
-    background: radial-gradient(circle at top left, #0a0f1f 0%, #050816 45%, #02010a 100%);
+    background: linear-gradient(135deg, #0b1020, #050816);
     color: #e5e7eb;
 }
 
@@ -25,62 +25,67 @@ header[data-testid="stHeader"] { background: transparent; }
     padding-top: 1.2rem;
 }
 
-/* Chat wrapper */
-.chat-wrap { background: transparent; }
+/* Chat */
+.xo-chat-wrapper { background: transparent; }
 
-/* Rows */
-.row { display: flex; margin-bottom: 0.75rem; }
-.row.user { justify-content: flex-end; }
-.row.assistant { justify-content: flex-start; }
+/* Messages */
+.xo-msg-row { display: flex; margin-bottom: 0.6rem; }
+.xo-msg-row.user { justify-content: flex-end; }
+.xo-msg-row.assistant { justify-content: flex-start; }
 
-/* Bubbles */
-.bubble {
+.xo-msg-bubble {
     max-width: 78%;
-    padding: 0.75rem 0.95rem;
-    border-radius: 16px;
-    font-size: 0.92rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 14px;
+    font-size: 0.9rem;
     line-height: 1.55;
 }
 
-.bubble.user {
-    background: linear-gradient(135deg, #1e40af, #2563eb);
-    color: #ffffff;
-    box-shadow: 0 0 14px rgba(37,99,235,0.35);
+.xo-msg-bubble.user {
+    background: linear-gradient(135deg, #2563eb, #1e40af);
+    color: #fff;
 }
 
-.bubble.assistant {
-    background: rgba(10,15,31,0.9);
-    border: 1px solid rgba(59,130,246,0.35);
-    box-shadow: 0 0 18px rgba(59,130,246,0.15);
+.xo-msg-bubble.assistant {
+    background: #111827;
+    border: 1px solid #1f2937;
 }
 
-/* Labels */
-.label {
+.xo-msg-label {
     font-size: 0.65rem;
     letter-spacing: 0.08em;
-    opacity: 0.65;
-    margin-bottom: 0.25rem;
+    opacity: 0.7;
+    margin-bottom: 0.2rem;
 }
 
-/* Glow typing */
-.glow {
-    font-size: 0.85rem;
-    color: #60a5fa;
-    animation: glow 1.4s infinite ease-in-out;
+/* Meta bar */
+.xo-meta {
+    font-size: 0.65rem;
+    opacity: 0.6;
+    margin-top: 0.25rem;
+    display: flex;
+    gap: 0.6rem;
 }
 
-@keyframes glow {
-    0% { opacity: .3; text-shadow: 0 0 4px #60a5fa; }
-    50% { opacity: 1; text-shadow: 0 0 14px #3b82f6; }
-    100% { opacity: .3; text-shadow: 0 0 4px #60a5fa; }
+/* Buttons */
+.xo-btn {
+    cursor: pointer;
+    font-size: 0.65rem;
+    opacity: 0.75;
+}
+.xo-btn:hover { opacity: 1; }
+
+/* Auto scroll */
+#scroll-anchor {
+    height: 1px;
 }
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ================= CONSTANTS =================
-MODEL = "llama-3.1-8b-instant"
-MAX_TOKENS = 260
+FAST_MODEL = "llama-3.1-8b-instant"
+MAX_TOKENS = 250
 MAX_HISTORY = 6
 
 # ================= STATE =================
@@ -93,107 +98,104 @@ if "memory_on" not in st.session_state:
 if "last_user_prompt" not in st.session_state:
     st.session_state.last_user_prompt = None
 
-if "welcome_shown" not in st.session_state:
-    st.session_state.welcome_shown = False
-
-# ================= GROQ CLIENT =================
+# ================= GROQ =================
 def groq_client():
     return Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
-# ================= SYSTEM PROMPT =================
+# ================= PROMPT =================
 def system_prompt():
     return (
-        "You are DrakFury AI from Nexo.corp. "
-        "Fast, calm, intelligent, and precise. "
-        "Short answers by default. "
-        "Go deep only when asked."
+        "You are XO AI from Nexo.corp. "
+        "Calm, helpful, clear. "
+        "Short answers unless user asks deep."
     )
 
 # ================= CHAT =================
 def render_chat():
-    st.markdown("<div class='chat-wrap'>", unsafe_allow_html=True)
+    st.markdown("<div class='xo-chat-wrapper'>", unsafe_allow_html=True)
 
-    # 🔥 Logo (safe local file)
-    if os.path.exists("drakfury_logo.png"):
-        st.image("drakfury_logo.png", width=180)
-
-    # Welcome message (plain text only)
-    if not st.session_state.welcome_shown:
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": "Welcome. I am DrakFury.\n\nSilent. Fast. Intelligent.\n\nAsk me anything."
-        })
-        st.session_state.welcome_shown = True
-
-    # Render chat history
-    for m in st.session_state.messages:
+    # Render history
+    for i, m in enumerate(st.session_state.messages):
         role = m["role"]
-        label = "You" if role == "user" else "DrakFury"
+        label = "You" if role == "user" else "XO AI"
+
+        meta = ""
+        if role == "assistant" and "time" in m:
+            meta = f"""
+            <div class="xo-meta">
+                <span>{m["time"]} ms</span>
+                <span class="xo-btn" onclick="navigator.clipboard.writeText(`{m['content']}`)">Copy</span>
+            </div>
+            """
 
         st.markdown(
             f"""
-            <div class="row {role}">
-                <div class="bubble {role}">
-                    <div class="label">{label}</div>
+            <div class="xo-msg-row {role}">
+                <div class="xo-msg-bubble {role}">
+                    <div class="xo-msg-label">{label}</div>
                     {m["content"]}
+                    {meta}
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-    user_input = st.chat_input("Ask DrakFury...")
+    user_input = st.chat_input("Ask XO AI...")
 
-    if user_input and user_input.strip():
+    if user_input:
         st.session_state.last_user_prompt = user_input
         st.session_state.messages.append(
             {"role": "user", "content": user_input}
         )
 
         history = st.session_state.messages
-        history = history[-MAX_HISTORY:] if st.session_state.memory_on else history[-1:]
+        if st.session_state.memory_on:
+            history = history[-MAX_HISTORY:]
+        else:
+            history = history[-1:]
 
-        messages = [{"role": "system", "content": system_prompt()}] + [
-            {"role": m["role"], "content": str(m["content"])}
-            for m in history
-        ]
+        messages = [{"role": "system", "content": system_prompt()}] + history
 
-        typing = st.empty()
-        typing.markdown(
-            """
-            <div class="row assistant">
-                <div class="bubble assistant">
-                    <div class="label">DrakFury</div>
-                    <div class="glow">DrakFury is thinking…</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
+        assistant_box = st.empty()
+        reply = ""
+        start_time = time.time()
 
-        start = time.time()
-        response = groq_client().chat.completions.create(
-            model=MODEL,
+        stream = groq_client().chat.completions.create(
+            model=FAST_MODEL,
             messages=messages,
-            max_tokens=MAX_TOKENS
+            max_tokens=MAX_TOKENS,
+            stream=True,
         )
 
-        typing.empty()
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                reply += chunk.choices[0].delta.content
+                assistant_box.markdown(
+                    f"""
+                    <div class="xo-msg-row assistant">
+                        <div class="xo-msg-bubble assistant">
+                            <div class="xo-msg-label">XO AI</div>
+                            {reply}
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
 
-        reply = response.choices[0].message.content
-        elapsed = int((time.time() - start) * 1000)
+        elapsed = int((time.time() - start_time) * 1000)
 
         st.session_state.messages.append(
-            {"role": "assistant", "content": reply}
+            {"role": "assistant", "content": reply, "time": elapsed}
         )
 
-        st.experimental_rerun()
+    st.markdown('<div id="scroll-anchor"></div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ================= SIDEBAR =================
 with st.sidebar:
-    st.markdown("### 🐉 DrakFury Controls")
+    st.markdown("### ⚙️ XO AI Controls")
     st.toggle("Memory ON", key="memory_on")
-
     if st.button("🔁 Regenerate"):
         if st.session_state.last_user_prompt:
             st.session_state.messages = st.session_state.messages[:-1]
@@ -204,8 +206,6 @@ with st.sidebar:
 
     if st.button("🧹 Clear Chat"):
         st.session_state.messages = []
-        st.session_state.welcome_shown = False
-        st.experimental_rerun()
 
 # ================= RUN =================
 render_chat()
