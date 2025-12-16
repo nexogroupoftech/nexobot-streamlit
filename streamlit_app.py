@@ -189,8 +189,6 @@ def render_chat():
 
         st.experimental_rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
-
 # ================= SIDEBAR =================
 with st.sidebar:
     st.markdown("### 🐉 DrakFury Controls")
