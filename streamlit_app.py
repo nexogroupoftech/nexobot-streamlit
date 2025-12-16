@@ -26,15 +26,15 @@ header[data-testid="stHeader"] { background: transparent; }
 }
 
 /* Chat */
-.drak-chat { background: transparent; }
+.chat-wrap { background: transparent; }
 
 /* Rows */
-.msg-row { display: flex; margin-bottom: 0.75rem; }
-.msg-row.user { justify-content: flex-end; }
-.msg-row.assistant { justify-content: flex-start; }
+.row { display: flex; margin-bottom: 0.75rem; }
+.row.user { justify-content: flex-end; }
+.row.assistant { justify-content: flex-start; }
 
 /* Bubbles */
-.msg {
+.bubble {
     max-width: 78%;
     padding: 0.75rem 0.95rem;
     border-radius: 16px;
@@ -42,13 +42,13 @@ header[data-testid="stHeader"] { background: transparent; }
     line-height: 1.55;
 }
 
-.msg.user {
+.bubble.user {
     background: linear-gradient(135deg, #1e40af, #2563eb);
     color: #ffffff;
     box-shadow: 0 0 14px rgba(37,99,235,0.35);
 }
 
-.msg.assistant {
+.bubble.assistant {
     background: rgba(10,15,31,0.9);
     border: 1px solid rgba(59,130,246,0.35);
     box-shadow: 0 0 18px rgba(59,130,246,0.15);
@@ -73,7 +73,7 @@ header[data-testid="stHeader"] { background: transparent; }
 .meta span { cursor: pointer; }
 
 /* Glow typing */
-.glow-typing {
+.glow {
     font-size: 0.85rem;
     color: #60a5fa;
     animation: glow 1.4s infinite ease-in-out;
@@ -121,13 +121,21 @@ def system_prompt():
 
 # ================= CHAT =================
 def render_chat():
-    st.markdown("<div class='drak-chat'>", unsafe_allow_html=True)
+    st.markdown("<div class='chat-wrap'>", unsafe_allow_html=True)
 
-    # Welcome message (once)
+    # 🔥 LOGO (SAFE WAY)
+    if os.path.exists("drakfury_logo.png"):
+        st.image(
+            "drakfury_logo.png",
+            width=180,
+            use_container_width=False
+        )
+
+    # Welcome message (PURE TEXT — NO HTML)
     if not st.session_state.welcome_shown:
         st.session_state.messages.append({
             "role": "assistant",
-            "content": "🐉 **Welcome. I am DrakFury.**<br>Silent. Fast. Intelligent.<br><br>Ask me anything.",
+            "content": "Welcome. I am DrakFury.\n\nSilent. Fast. Intelligent.\n\nAsk me anything.",
             "time": None
         })
         st.session_state.welcome_shown = True
@@ -148,8 +156,8 @@ def render_chat():
 
         st.markdown(
             f"""
-            <div class="msg-row {role}">
-                <div class="msg {role}">
+            <div class="row {role}">
+                <div class="bubble {role}">
                     <div class="label">{label}</div>
                     {m["content"]}
                     {meta}
@@ -161,21 +169,27 @@ def render_chat():
 
     user_input = st.chat_input("Ask DrakFury...")
 
-    if user_input:
+    if user_input and user_input.strip():
         st.session_state.last_user_prompt = user_input
-        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append(
+            {"role": "user", "content": user_input}
+        )
 
         history = st.session_state.messages
         history = history[-MAX_HISTORY:] if st.session_state.memory_on else history[-1:]
-        messages = [{"role": "system", "content": system_prompt()}] + history
 
-        typing_box = st.empty()
-        typing_box.markdown(
+        messages = [{"role": "system", "content": system_prompt()}] + [
+            {"role": m["role"], "content": str(m["content"])}
+            for m in history
+        ]
+
+        typing = st.empty()
+        typing.markdown(
             """
-            <div class="msg-row assistant">
-                <div class="msg assistant">
+            <div class="row assistant">
+                <div class="bubble assistant">
                     <div class="label">DrakFury</div>
-                    <div class="glow-typing">DrakFury is thinking…</div>
+                    <div class="glow">DrakFury is thinking…</div>
                 </div>
             </div>
             """,
@@ -183,14 +197,13 @@ def render_chat():
         )
 
         start = time.time()
-
         response = groq_client().chat.completions.create(
             model=MODEL,
             messages=messages,
             max_tokens=MAX_TOKENS
         )
 
-        typing_box.empty()
+        typing.empty()
 
         reply = response.choices[0].message.content
         elapsed = int((time.time() - start) * 1000)
