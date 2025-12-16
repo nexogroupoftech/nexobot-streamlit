@@ -25,7 +25,7 @@ header[data-testid="stHeader"] { background: transparent; }
     padding-top: 1.2rem;
 }
 
-/* Chat */
+/* Chat wrapper */
 .chat-wrap { background: transparent; }
 
 /* Rows */
@@ -61,16 +61,6 @@ header[data-testid="stHeader"] { background: transparent; }
     opacity: 0.65;
     margin-bottom: 0.25rem;
 }
-
-/* Meta */
-.meta {
-    font-size: 0.65rem;
-    opacity: 0.6;
-    margin-top: 0.35rem;
-    display: flex;
-    gap: 0.9rem;
-}
-.meta span { cursor: pointer; }
 
 /* Glow typing */
 .glow {
@@ -123,36 +113,22 @@ def system_prompt():
 def render_chat():
     st.markdown("<div class='chat-wrap'>", unsafe_allow_html=True)
 
-    # 🔥 LOGO (SAFE WAY)
-  if os.path.exists("drakfury_logo.png.png"):
-        st.image(
-            "drakfury_logo.png",
-            width=180,
-            use_container_width=False
-        )
+    # 🔥 Logo (safe local file)
+    if os.path.exists("drakfury_logo.png"):
+        st.image("drakfury_logo.png", width=180)
 
-    # Welcome message (PURE TEXT — NO HTML)
+    # Welcome message (plain text only)
     if not st.session_state.welcome_shown:
         st.session_state.messages.append({
             "role": "assistant",
-            "content": "Welcome. I am DrakFury.\n\nSilent. Fast. Intelligent.\n\nAsk me anything.",
-            "time": None
+            "content": "Welcome. I am DrakFury.\n\nSilent. Fast. Intelligent.\n\nAsk me anything."
         })
         st.session_state.welcome_shown = True
 
-    # Render messages
+    # Render chat history
     for m in st.session_state.messages:
         role = m["role"]
         label = "You" if role == "user" else "DrakFury"
-
-        meta = ""
-        if role == "assistant" and m.get("time") is not None:
-            meta = f"""
-            <div class="meta">
-                <span>{m["time"]} ms</span>
-                <span onclick="navigator.clipboard.writeText(`{m['content']}`)">Copy</span>
-            </div>
-            """
 
         st.markdown(
             f"""
@@ -160,7 +136,6 @@ def render_chat():
                 <div class="bubble {role}">
                     <div class="label">{label}</div>
                     {m["content"]}
-                    {meta}
                 </div>
             </div>
             """,
@@ -209,7 +184,7 @@ def render_chat():
         elapsed = int((time.time() - start) * 1000)
 
         st.session_state.messages.append(
-            {"role": "assistant", "content": reply, "time": elapsed}
+            {"role": "assistant", "content": reply}
         )
 
         st.experimental_rerun()
