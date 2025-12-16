@@ -25,15 +25,15 @@ header[data-testid="stHeader"] { background: transparent; }
     padding-top: 1.2rem;
 }
 
-/* Chat wrapper */
+/* Chat */
 .drak-chat { background: transparent; }
 
-/* Message rows */
-.msg-row { display: flex; margin-bottom: 0.7rem; }
+/* Rows */
+.msg-row { display: flex; margin-bottom: 0.75rem; }
 .msg-row.user { justify-content: flex-end; }
 .msg-row.assistant { justify-content: flex-start; }
 
-/* Message bubbles */
+/* Bubbles */
 .msg {
     max-width: 78%;
     padding: 0.75rem 0.95rem;
@@ -42,16 +42,14 @@ header[data-testid="stHeader"] { background: transparent; }
     line-height: 1.55;
 }
 
-/* User */
 .msg.user {
     background: linear-gradient(135deg, #1e40af, #2563eb);
     color: #ffffff;
-    box-shadow: 0 0 12px rgba(37,99,235,0.35);
+    box-shadow: 0 0 14px rgba(37,99,235,0.35);
 }
 
-/* Assistant */
 .msg.assistant {
-    background: rgba(10,15,31,0.85);
+    background: rgba(10,15,31,0.9);
     border: 1px solid rgba(59,130,246,0.35);
     box-shadow: 0 0 18px rgba(59,130,246,0.15);
 }
@@ -68,18 +66,13 @@ header[data-testid="stHeader"] { background: transparent; }
 .meta {
     font-size: 0.65rem;
     opacity: 0.6;
-    margin-top: 0.3rem;
+    margin-top: 0.35rem;
     display: flex;
-    gap: 0.8rem;
+    gap: 0.9rem;
 }
+.meta span { cursor: pointer; }
 
-/* Buttons */
-.meta span {
-    cursor: pointer;
-}
-.meta span:hover { opacity: 1; }
-
-/* Glow typing animation */
+/* Glow typing */
 .glow-typing {
     font-size: 0.85rem;
     color: #60a5fa;
@@ -88,18 +81,15 @@ header[data-testid="stHeader"] { background: transparent; }
 
 @keyframes glow {
     0% { opacity: .3; text-shadow: 0 0 4px #60a5fa; }
-    50% { opacity: 1; text-shadow: 0 0 12px #3b82f6; }
+    50% { opacity: 1; text-shadow: 0 0 14px #3b82f6; }
     100% { opacity: .3; text-shadow: 0 0 4px #60a5fa; }
 }
-
-/* Auto-scroll anchor */
-#scroll-anchor { height: 1px; }
 </style>
 """
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # ================= CONSTANTS =================
-FAST_MODEL = "llama-3.1-8b-instant"
+MODEL = "llama-3.1-8b-instant"
 MAX_TOKENS = 260
 MAX_HISTORY = 6
 
@@ -116,7 +106,7 @@ if "last_user_prompt" not in st.session_state:
 if "welcome_shown" not in st.session_state:
     st.session_state.welcome_shown = False
 
-# ================= GROQ =================
+# ================= GROQ CLIENT =================
 def groq_client():
     return Groq(api_key=os.environ.get("GROQ_API_KEY"))
 
@@ -133,16 +123,16 @@ def system_prompt():
 def render_chat():
     st.markdown("<div class='drak-chat'>", unsafe_allow_html=True)
 
-    # Welcome message (ONCE)
+    # Welcome message (once)
     if not st.session_state.welcome_shown:
         st.session_state.messages.append({
             "role": "assistant",
-            "content": "🐉 **Welcome. I am DrakFury.**\n\nSilent. Fast. Intelligent.\nAsk me anything.",
+            "content": "🐉 **Welcome. I am DrakFury.**<br>Silent. Fast. Intelligent.<br><br>Ask me anything.",
             "time": None
         })
         st.session_state.welcome_shown = True
 
-    # Render history
+    # Render messages
     for m in st.session_state.messages:
         role = m["role"]
         label = "You" if role == "user" else "DrakFury"
@@ -177,7 +167,6 @@ def render_chat():
 
         history = st.session_state.messages
         history = history[-MAX_HISTORY:] if st.session_state.memory_on else history[-1:]
-
         messages = [{"role": "system", "content": system_prompt()}] + history
 
         typing_box = st.empty()
@@ -193,46 +182,32 @@ def render_chat():
             unsafe_allow_html=True
         )
 
-        reply_box = st.empty()
-        reply = ""
         start = time.time()
 
-        stream = groq_client().chat.completions.create(
-            model=FAST_MODEL,
+        response = groq_client().chat.completions.create(
+            model=MODEL,
             messages=messages,
-            max_tokens=MAX_TOKENS,
-            stream=True
+            max_tokens=MAX_TOKENS
         )
 
-        for chunk in stream:
-            if chunk.choices[0].delta.content:
-                reply += chunk.choices[0].delta.content
-                reply_box.markdown(
-                    f"""
-                    <div class="msg-row assistant">
-                        <div class="msg assistant">
-                            <div class="label">DrakFury</div>
-                            {reply}
-                        </div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
         typing_box.empty()
+
+        reply = response.choices[0].message.content
         elapsed = int((time.time() - start) * 1000)
 
         st.session_state.messages.append(
             {"role": "assistant", "content": reply, "time": elapsed}
         )
 
-    st.markdown('<div id="scroll-anchor"></div>', unsafe_allow_html=True)
+        st.experimental_rerun()
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # ================= SIDEBAR =================
 with st.sidebar:
     st.markdown("### 🐉 DrakFury Controls")
     st.toggle("Memory ON", key="memory_on")
+
     if st.button("🔁 Regenerate"):
         if st.session_state.last_user_prompt:
             st.session_state.messages = st.session_state.messages[:-1]
@@ -244,6 +219,7 @@ with st.sidebar:
     if st.button("🧹 Clear Chat"):
         st.session_state.messages = []
         st.session_state.welcome_shown = False
+        st.experimental_rerun()
 
 # ================= RUN =================
 render_chat()
