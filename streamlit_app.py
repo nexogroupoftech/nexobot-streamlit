@@ -50,7 +50,7 @@ if not st.session_state.welcome_shown:
     })
     st.session_state.welcome_shown = True
 
-# ================= CHAT DISPLAY =================
+# ================= CHAT HISTORY =================
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
@@ -59,22 +59,22 @@ for msg in st.session_state.messages:
 user_input = st.chat_input("Ask DrakFury...")
 
 if user_input:
-    # add user message
-    st.session_state.messages.append({
-        "role": "user",
-        "content": user_input
-    })
+    # 1️⃣ Save user message FIRST
+    user_msg = {"role": "user", "content": user_input}
+    st.session_state.messages.append(user_msg)
 
-    # 🔥 BUILD SAFE PAYLOAD FOR GROQ
+    # 2️⃣ SHOW user message immediately (NO DELAY)
+    with st.chat_message("user"):
+        st.write(user_input)
+
+    # 3️⃣ Build clean Groq payload
     groq_messages = [SYSTEM_MESSAGE] + [
-        {
-            "role": m["role"],
-            "content": str(m["content"])
-        }
+        {"role": m["role"], "content": str(m["content"])}
         for m in st.session_state.messages
         if m["role"] in ("user", "assistant")
     ]
 
+    # 4️⃣ Get AI reply
     with st.chat_message("assistant"):
         with st.spinner("DrakFury is thinking…"):
             response = client.chat.completions.create(
@@ -85,8 +85,11 @@ if user_input:
             reply = response.choices[0].message.content
             st.write(reply)
 
-    # save assistant reply
+    # 5️⃣ Save assistant reply
     st.session_state.messages.append({
         "role": "assistant",
         "content": reply
     })
+
+    # 6️⃣ Rerun cleanly
+    st.rerun()
