@@ -104,7 +104,7 @@ def system_prompt():
 def render_chat():
     st.markdown("<div class='xo-chat-wrapper'>", unsafe_allow_html=True)
 
-    # Show chat history
+    # 1️⃣ Render full chat history (STABLE)
     for m in st.session_state.messages:
         role = m["role"]
         label = "You" if role == "user" else "XO AI"
@@ -120,34 +120,35 @@ def render_chat():
             unsafe_allow_html=True
         )
 
+    # 2️⃣ Input
     user_input = st.chat_input("Ask XO AI...")
 
     if user_input:
-        # Save user message
-        st.session_state.messages.append(
-            {"role": "user", "content": user_input}
-        )
+        # 3️⃣ Save user message FIRST
+        user_msg = {"role": "user", "content": user_input}
+        st.session_state.messages.append(user_msg)
 
-        messages = (
-            [{"role": "system", "content": system_prompt()}]
-            + st.session_state.messages[-MAX_HISTORY:]
-        )
-
-        # Typing animation
-        typing_box = st.empty()
-        typing_box.markdown(
-            """
-            <div class='xo-msg-row assistant'>
-                <div class='xo-msg-bubble assistant'>
-                    <div class='xo-msg-label'>XO AI</div>
-                    <div class='xo-typing'>Typing...</div>
+        # 4️⃣ Show user message immediately (NO LAG)
+        st.markdown(
+            f"""
+            <div class='xo-msg-row user'>
+                <div class='xo-msg-bubble user'>
+                    <div class='xo-msg-label'>You</div>
+                    {user_input}
                 </div>
             </div>
             """,
             unsafe_allow_html=True
         )
 
-        reply_box = st.empty()
+        # 5️⃣ Prepare messages for model
+        messages = (
+            [{"role": "system", "content": system_prompt()}]
+            + st.session_state.messages[-MAX_HISTORY:]
+        )
+
+        # 6️⃣ Assistant placeholder (ONLY ONCE)
+        assistant_box = st.empty()
         reply = ""
 
         try:
@@ -155,13 +156,14 @@ def render_chat():
                 model=FAST_MODEL,
                 messages=messages,
                 max_tokens=MAX_TOKENS,
-                stream=True
+                stream=True,
             )
 
             for chunk in stream:
                 if chunk.choices[0].delta.content:
                     reply += chunk.choices[0].delta.content
-                    reply_box.markdown(
+
+                    assistant_box.markdown(
                         f"""
                         <div class='xo-msg-row assistant'>
                             <div class='xo-msg-bubble assistant'>
@@ -173,18 +175,18 @@ def render_chat():
                         unsafe_allow_html=True
                     )
 
-            typing_box.empty()
-
+            # 7️⃣ Save assistant reply ONCE
             st.session_state.messages.append(
                 {"role": "assistant", "content": reply}
             )
 
         except Exception as e:
-            typing_box.empty()
-            st.error("XO AI is busy. Please try again.")
+            assistant_box.empty()
+            st.error("XO AI is busy. Try again.")
             st.caption(str(e))
 
     st.markdown("</div>", unsafe_allow_html=True)
+
 
 # ================= MAIN =================
 def main():
