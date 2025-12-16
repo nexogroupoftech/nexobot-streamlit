@@ -27,28 +27,9 @@ header[data-testid="stHeader"] {
     background: transparent;
 }
 
-section.main > div {
-    padding-top: 1.4rem;
-}
-
-/* Chat bubble polish */
-.stChatMessage {
-    padding: 0.25rem 0;
-}
-
-.stChatMessage[data-testid="chat-message-user"] {
-    background: linear-gradient(135deg, #1e40af, #2563eb);
-    border-radius: 14px;
-    padding: 0.65rem 0.85rem;
-    color: white;
-}
-
-.stChatMessage[data-testid="chat-message-assistant"] {
-    background: rgba(15, 23, 42, 0.92);
-    border: 1px solid rgba(59,130,246,0.25);
-    border-radius: 14px;
-    padding: 0.65rem 0.85rem;
-    box-shadow: 0 0 18px rgba(59,130,246,0.12);
+/* Remove avatar spacing */
+.stChatMessageAvatar {
+    display: none;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -66,55 +47,57 @@ MODEL = "llama-3.1-8b-instant"
 
 SYSTEM_MESSAGE = {
     "role": "system",
-    "content": "You are DrakFury AI. Calm, fast, intelligent, and precise."
+    "content": (
+        "You are DrakFury. "
+        "Talk like a calm, smart human. "
+        "No robotic phrases. "
+        "No explaining greetings. "
+        "Keep replies short unless asked. "
+        "Be friendly and natural."
+    )
 }
 
 # ================= HEADER =================
 st.markdown(
-    "<h2 style='text-align:center; margin-bottom:0.2rem;'>🐉 DrakFury AI</h2>",
+    "<h2 style='text-align:center; margin-bottom:0.2rem;'>DrakFury</h2>",
     unsafe_allow_html=True
 )
 
 st.markdown(
-    "<p style='text-align:center; opacity:0.7; font-size:0.9rem;'>Silent · Fast · Intelligent</p>",
+    "<p style='text-align:center; opacity:0.7; font-size:0.85rem;'>Silent · Fast · Intelligent</p>",
     unsafe_allow_html=True
 )
 
 if os.path.exists("drakfury_logo.png"):
-    st.image("drakfury_logo.png", width=150)
+    st.image("drakfury_logo.png", width=140)
 
 # ================= WELCOME =================
 if not st.session_state.welcome_done:
     st.session_state.messages.append({
         "role": "assistant",
-        "content": (
-            "Welcome. I am **DrakFury**.\n\n"
-            "Silent. Fast. Intelligent.\n\n"
-            "Ask me anything."
-        )
+        "content": "Welcome. I’m DrakFury.\n\nAsk me anything."
     })
     st.session_state.welcome_done = True
 
 # ================= CHAT HISTORY =================
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
+    with st.chat_message(msg["role"], avatar=None):
         st.write(msg["content"])
 
 # ================= USER INPUT =================
-user_input = st.chat_input("Ask DrakFury...")
+user_input = st.chat_input("Type here...")
 
 if user_input:
-    # Save user message
+    # Save + show user message immediately
     st.session_state.messages.append({
         "role": "user",
         "content": user_input
     })
 
-    # Show user message immediately
-    with st.chat_message("user"):
+    with st.chat_message("user", avatar=None):
         st.write(user_input)
 
-    # Build safe payload for Groq
+    # Build Groq-safe payload
     groq_messages = [SYSTEM_MESSAGE] + [
         {"role": m["role"], "content": str(m["content"])}
         for m in st.session_state.messages
@@ -122,17 +105,16 @@ if user_input:
     ]
 
     # Assistant reply
-    with st.chat_message("assistant"):
-        with st.spinner("DrakFury is thinking…"):
+    with st.chat_message("assistant", avatar=None):
+        with st.spinner("Thinking…"):
             response = client.chat.completions.create(
                 model=MODEL,
                 messages=groq_messages,
-                max_tokens=250
+                max_tokens=200
             )
             reply = response.choices[0].message.content
             st.write(reply)
 
-    # Save assistant reply
     st.session_state.messages.append({
         "role": "assistant",
         "content": reply
