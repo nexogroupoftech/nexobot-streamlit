@@ -9,17 +9,18 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= CHATGPT-LIKE THEME =================
+# ================= PREMIUM DARK UI (CHATGPT-LIKE) =================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 
+/* Base */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
 .stApp {
-    background: #0f172a;
+    background: #0b0f19;
     color: #e5e7eb;
 }
 
@@ -27,30 +28,34 @@ header[data-testid="stHeader"] {
     background: transparent;
 }
 
-/* Remove avatars completely */
-.stChatMessageAvatar {
-    display: none;
+/* ===== REMOVE ALL AVATARS COMPLETELY ===== */
+[data-testid="chat-message-avatar"] {
+    display: none !important;
 }
 
-/* Chat container spacing */
+.stChatMessage > div:first-child {
+    display: none !important;
+}
+
 .stChatMessage {
-    padding: 0.4rem 0;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
-/* USER MESSAGE (right side like ChatGPT) */
+/* ===== CHAT BUBBLES ===== */
 .stChatMessage[data-testid="chat-message-user"] {
     display: flex;
     justify-content: flex-end;
 }
 
 .stChatMessage[data-testid="chat-message-user"] > div {
-    background: #1e293b;
-    border-radius: 12px;
-    padding: 0.6rem 0.8rem;
-    max-width: 75%;
+    background: linear-gradient(135deg, #1e293b, #111827);
+    border-radius: 14px;
+    padding: 0.65rem 0.9rem;
+    max-width: 72%;
+    color: #f9fafb;
 }
 
-/* ASSISTANT MESSAGE (left side) */
 .stChatMessage[data-testid="chat-message-assistant"] {
     display: flex;
     justify-content: flex-start;
@@ -58,17 +63,28 @@ header[data-testid="stHeader"] {
 
 .stChatMessage[data-testid="chat-message-assistant"] > div {
     background: #020617;
-    border-radius: 12px;
-    padding: 0.6rem 0.8rem;
-    max-width: 75%;
-    border: 1px solid rgba(148,163,184,0.15);
+    border-radius: 14px;
+    padding: 0.65rem 0.9rem;
+    max-width: 72%;
+    border: 1px solid rgba(148,163,184,0.18);
+    box-shadow: 0 0 20px rgba(59,130,246,0.08);
 }
 
 /* Input box */
 textarea {
     background: #020617 !important;
     color: #e5e7eb !important;
-    border-radius: 10px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(148,163,184,0.2) !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,0.25);
+    border-radius: 6px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -89,7 +105,7 @@ SYSTEM_MESSAGE = {
     "content": (
         "You are DrakFury. "
         "Talk like a real human. "
-        "Short, calm, direct replies. "
+        "Short, calm, confident replies. "
         "No robotic explanations."
     )
 }
@@ -118,23 +134,24 @@ if not st.session_state.welcome_done:
 
 # ================= CHAT HISTORY =================
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"], avatar=None):
+    with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
 # ================= USER INPUT =================
 user_input = st.chat_input("Message DrakFury…")
 
 if user_input:
-    # Add user message
+    # Save user message
     st.session_state.messages.append({
         "role": "user",
         "content": user_input
     })
 
-    with st.chat_message("user", avatar=None):
+    # Show user instantly
+    with st.chat_message("user"):
         st.write(user_input)
 
-    # Build Groq-safe messages
+    # Build Groq payload safely
     groq_messages = [SYSTEM_MESSAGE] + [
         {"role": m["role"], "content": str(m["content"])}
         for m in st.session_state.messages
@@ -142,7 +159,7 @@ if user_input:
     ]
 
     # Assistant reply
-    with st.chat_message("assistant", avatar=None):
+    with st.chat_message("assistant"):
         with st.spinner("Thinking…"):
             response = client.chat.completions.create(
                 model=MODEL,
