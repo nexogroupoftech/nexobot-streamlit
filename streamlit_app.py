@@ -124,7 +124,7 @@ def render_chat():
     st.markdown("<div class='chat-wrap'>", unsafe_allow_html=True)
 
     # 🔥 LOGO (SAFE WAY)
-    if os.path.exists("drakfury_logo.png"):
+  if os.path.exists("drakfury_logo.png.png"):
         st.image(
             "drakfury_logo.png",
             width=180,
