@@ -4,7 +4,7 @@ from groq import Groq
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="DrakFury",
+    page_title="DarkFury",
     page_icon="🐉",
     layout="wide"
 )
@@ -103,7 +103,7 @@ MODEL = "llama-3.1-8b-instant"
 SYSTEM_MESSAGE = {
     "role": "system",
     "content": (
-        "You are DrakFury. "
+        "You are DarkFury. "
         "Talk like a real human. "
         "Short, calm, confident replies. "
         "No robotic explanations."
@@ -121,14 +121,14 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-if os.path.exists("drakfury_logo.png"):
+if os.path.exists("darkfury_logo.png"):
     st.image("drakfury_logo.png", width=120)
 
 # ================= WELCOME =================
 if not st.session_state.welcome_done:
     st.session_state.messages.append({
         "role": "assistant",
-        "content": "Hey. I’m DrakFury.\n\nWhat do you want to talk about?"
+        "content": "Hey. I’m DarkFury.\n\nWhat do you want to talk about?"
     })
     st.session_state.welcome_done = True
 
@@ -138,7 +138,7 @@ for msg in st.session_state.messages:
         st.write(msg["content"])
 
 # ================= USER INPUT =================
-user_input = st.chat_input("Message DrakFury…")
+user_input = st.chat_input("Message DarkFury…")
 
 if user_input:
     # Save user message
