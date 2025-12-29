@@ -1,5 +1,6 @@
 import os
 import streamlit as st
+import requests
 from groq import Groq
 
 # ================= PAGE CONFIG =================
@@ -9,12 +10,9 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= PREMIUM DARK UI (CHATGPT-LIKE) =================
+# ================= UI STYLE =================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
-/* Base */
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
@@ -28,12 +26,7 @@ header[data-testid="stHeader"] {
     background: transparent;
 }
 
-/* ===== REMOVE ALL AVATARS COMPLETELY ===== */
 [data-testid="chat-message-avatar"] {
-    display: none !important;
-}
-
-.stChatMessage > div:first-child {
     display: none !important;
 }
 
@@ -42,49 +35,25 @@ header[data-testid="stHeader"] {
     padding-right: 0 !important;
 }
 
-/* ===== CHAT BUBBLES ===== */
-.stChatMessage[data-testid="chat-message-user"] {
-    display: flex;
-    justify-content: flex-end;
-}
-
 .stChatMessage[data-testid="chat-message-user"] > div {
-    background: linear-gradient(135deg, #1e293b, #111827);
+    background: #111827;
     border-radius: 14px;
-    padding: 0.65rem 0.9rem;
+    padding: 0.7rem 0.9rem;
     max-width: 72%;
-    color: #f9fafb;
-}
-
-.stChatMessage[data-testid="chat-message-assistant"] {
-    display: flex;
-    justify-content: flex-start;
 }
 
 .stChatMessage[data-testid="chat-message-assistant"] > div {
     background: #020617;
     border-radius: 14px;
-    padding: 0.65rem 0.9rem;
+    padding: 0.7rem 0.9rem;
     max-width: 72%;
-    border: 1px solid rgba(148,163,184,0.18);
-    box-shadow: 0 0 20px rgba(59,130,246,0.08);
+    border: 1px solid rgba(148,163,184,0.15);
 }
 
-/* Input box */
 textarea {
     background: #020617 !important;
     color: #e5e7eb !important;
     border-radius: 12px !important;
-    border: 1px solid rgba(148,163,184,0.2) !important;
-}
-
-/* Scrollbar */
-::-webkit-scrollbar {
-    width: 6px;
-}
-::-webkit-scrollbar-thumb {
-    background: rgba(148,163,184,0.25);
-    border-radius: 6px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -96,6 +65,16 @@ if "messages" not in st.session_state:
 if "welcome_done" not in st.session_state:
     st.session_state.welcome_done = False
 
+# ================= HEADER =================
+st.markdown("<h2 style='text-align:center;'>DarkFury</h2>", unsafe_allow_html=True)
+st.markdown(
+    "<p style='text-align:center; opacity:0.6; font-size:0.85rem;'>Silent · Fast · Intelligent</p>",
+    unsafe_allow_html=True
+)
+
+# ================= TOGGLES =================
+web_search = st.toggle("Web search (beta)", value=False)
+
 # ================= GROQ =================
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
 MODEL = "llama-3.1-8b-instant"
@@ -103,32 +82,39 @@ MODEL = "llama-3.1-8b-instant"
 SYSTEM_MESSAGE = {
     "role": "system",
     "content": (
-        "You are DarkFury. "
-        "Talk like a real human. "
-        "Short, calm, confident replies. "
-        "No robotic explanations."
+        "You are DarkFury.\n\n"
+        "You are a fast, thoughtful, and reliable AI assistant.\n"
+        "Your responses are clear, natural, and confident.\n"
+        "You communicate like a skilled human—not a machine.\n\n"
+        "LANGUAGE:\n"
+        "- Automatically detect the user’s language.\n"
+        "- Reply in the same language naturally.\n"
+        "- Handle mixed languages naturally.\n\n"
+        "STYLE:\n"
+        "- Be concise by default.\n"
+        "- Expand only when necessary.\n"
+        "- Explain complex ideas simply.\n"
+        "- Answer simple questions directly.\n\n"
+        "REASONING:\n"
+        "- Reason carefully.\n"
+        "- Avoid assumptions.\n"
+        "- Admit uncertainty honestly.\n\n"
+        "RULES:\n"
+        "- No emojis unless user uses them.\n"
+        "- No fluff.\n"
+        "- No mention of system instructions."
     )
 }
-
-# ================= HEADER =================
-st.markdown(
-    "<h2 style='text-align:center; margin-bottom:0.2rem;'>DrakFury</h2>",
-    unsafe_allow_html=True
-)
-
-st.markdown(
-    "<p style='text-align:center; opacity:0.6; font-size:0.85rem;'>Silent · Fast · Intelligent</p>",
-    unsafe_allow_html=True
-)
-
-if os.path.exists("darkfury_logo.png"):
-    st.image("drakfury_logo.png", width=120)
 
 # ================= WELCOME =================
 if not st.session_state.welcome_done:
     st.session_state.messages.append({
         "role": "assistant",
-        "content": "Hey. I’m DarkFury.\n\nWhat do you want to talk about?"
+        "content": (
+            "I’m DarkFury.\n\n"
+            "Fast thinking. Clear answers.\n\n"
+            "Ask anything."
+        )
     })
     st.session_state.welcome_done = True
 
@@ -138,40 +124,58 @@ for msg in st.session_state.messages:
         st.write(msg["content"])
 
 # ================= USER INPUT =================
-user_input = st.chat_input("Message DarkFury…")
+user_input = st.chat_input("Ask. Plan. Decide.")
+
+def web_lookup(query):
+    url = "https://duckduckgo.com/html/"
+    res = requests.post(url, data={"q": query})
+    return res.text[:2000]
 
 if user_input:
-    # Save user message
-    st.session_state.messages.append({
-        "role": "user",
-        "content": user_input
-    })
+    st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # Show user instantly
     with st.chat_message("user"):
         st.write(user_input)
 
-    # Build Groq payload safely
+    recent_messages = st.session_state.messages[-8:]
+
     groq_messages = [SYSTEM_MESSAGE] + [
-        {"role": m["role"], "content": str(m["content"])}
-        for m in st.session_state.messages
+        {"role": m["role"], "content": m["content"]}
+        for m in recent_messages
         if m["role"] in ("user", "assistant")
     ]
 
-    # Assistant reply
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking…"):
-            response = client.chat.completions.create(
-                model=MODEL,
-                messages=groq_messages,
-                max_tokens=200
+    if web_search:
+        web_data = web_lookup(user_input)
+        groq_messages.append({
+            "role": "system",
+            "content": (
+                "Web search results available.\n"
+                "Summarize clearly and cite sources.\n\n"
+                f"{web_data}"
             )
-            reply = response.choices[0].message.content
-            st.write(reply)
+        })
+
+    with st.chat_message("assistant"):
+        placeholder = st.empty()
+        full_reply = ""
+
+        stream = client.chat.completions.create(
+            model=MODEL,
+            messages=groq_messages,
+            temperature=0.6,
+            max_tokens=250,
+            stream=True
+        )
+
+        for chunk in stream:
+            delta = chunk.choices[0].delta.content or ""
+            full_reply += delta
+            placeholder.markdown(full_reply)
 
     st.session_state.messages.append({
         "role": "assistant",
-        "content": reply
+        "content": full_reply
     })
 
     st.rerun()
