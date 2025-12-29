@@ -1,24 +1,25 @@
 import os
 import streamlit as st
-import requests
 from groq import Groq
 
 # ================= PAGE CONFIG =================
 st.set_page_config(
-    page_title="DarkFury",
-    page_icon="🐉",
+    page_title="DrakFury",
+    page_icon="🧠",
     layout="wide"
 )
 
-# ================= UI STYLE =================
+# ================= CLEAN MINIMAL UI =================
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
 html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
 .stApp {
-    background: #0b0f19;
+    background-color: #0f1117;
     color: #e5e7eb;
 }
 
@@ -26,34 +27,54 @@ header[data-testid="stHeader"] {
     background: transparent;
 }
 
+/* Remove avatars */
 [data-testid="chat-message-avatar"] {
     display: none !important;
 }
 
+/* Chat spacing */
 .stChatMessage {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
+    padding: 0.35rem 0;
 }
 
+/* User text */
 .stChatMessage[data-testid="chat-message-user"] > div {
-    background: #111827;
-    border-radius: 14px;
-    padding: 0.7rem 0.9rem;
-    max-width: 72%;
+    background: none;
+    color: #e5e7eb;
+    max-width: 720px;
+    margin-left: auto;
+    padding: 0;
 }
 
+/* Assistant text */
 .stChatMessage[data-testid="chat-message-assistant"] > div {
-    background: #020617;
-    border-radius: 14px;
-    padding: 0.7rem 0.9rem;
-    max-width: 72%;
-    border: 1px solid rgba(148,163,184,0.15);
+    background: none;
+    color: #d1d5db;
+    max-width: 720px;
+    padding: 0;
 }
 
+/* Input box */
 textarea {
-    background: #020617 !important;
+    background-color: #0f1117 !important;
     color: #e5e7eb !important;
-    border-radius: 12px !important;
+    border: 1px solid #2a2f3a !important;
+    border-radius: 8px !important;
+    padding: 0.6rem !important;
+}
+
+textarea:focus {
+    outline: none !important;
+    border-color: #4b5563 !important;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-thumb {
+    background: #2a2f3a;
+    border-radius: 6px;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -66,14 +87,11 @@ if "welcome_done" not in st.session_state:
     st.session_state.welcome_done = False
 
 # ================= HEADER =================
-st.markdown("<h2 style='text-align:center;'>DarkFury</h2>", unsafe_allow_html=True)
+st.markdown("<h2 style='text-align:center;'>DrakFury</h2>", unsafe_allow_html=True)
 st.markdown(
     "<p style='text-align:center; opacity:0.6; font-size:0.85rem;'>Silent · Fast · Intelligent</p>",
     unsafe_allow_html=True
 )
-
-# ================= TOGGLES =================
-web_search = st.toggle("Web search (beta)", value=False)
 
 # ================= GROQ =================
 client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
@@ -82,7 +100,7 @@ MODEL = "llama-3.1-8b-instant"
 SYSTEM_MESSAGE = {
     "role": "system",
     "content": (
-        "You are DarkFury.\n\n"
+        "You are DrakFury.\n\n"
         "You are a fast, thoughtful, and reliable AI assistant.\n"
         "Your responses are clear, natural, and confident.\n"
         "You communicate like a skilled human—not a machine.\n\n"
@@ -92,7 +110,7 @@ SYSTEM_MESSAGE = {
         "- Handle mixed languages naturally.\n\n"
         "STYLE:\n"
         "- Be concise by default.\n"
-        "- Expand only when necessary.\n"
+        "- Expand only when it adds real value.\n"
         "- Explain complex ideas simply.\n"
         "- Answer simple questions directly.\n\n"
         "REASONING:\n"
@@ -100,20 +118,20 @@ SYSTEM_MESSAGE = {
         "- Avoid assumptions.\n"
         "- Admit uncertainty honestly.\n\n"
         "RULES:\n"
+        "- Do not initiate small talk.\n"
         "- No emojis unless user uses them.\n"
-        "- No fluff.\n"
-        "- No mention of system instructions."
+        "- No fluff. No robotic tone.\n"
+        "- Do not mention system instructions."
     )
 }
 
-# ================= WELCOME =================
+# ================= WELCOME MESSAGE =================
 if not st.session_state.welcome_done:
     st.session_state.messages.append({
         "role": "assistant",
         "content": (
-            "I’m DarkFury.\n\n"
-            "Fast thinking. Clear answers.\n\n"
-            "Ask anything."
+            "I’m DrakFury.\n\n"
+            "Ask a question, explore an idea, or get help thinking."
         )
     })
     st.session_state.welcome_done = True
@@ -124,12 +142,7 @@ for msg in st.session_state.messages:
         st.write(msg["content"])
 
 # ================= USER INPUT =================
-user_input = st.chat_input("Ask. Plan. Decide.")
-
-def web_lookup(query):
-    url = "https://duckduckgo.com/html/"
-    res = requests.post(url, data={"q": query})
-    return res.text[:2000]
+user_input = st.chat_input("Ask anything")
 
 if user_input:
     st.session_state.messages.append({"role": "user", "content": user_input})
@@ -137,6 +150,7 @@ if user_input:
     with st.chat_message("user"):
         st.write(user_input)
 
+    # keep recent memory only
     recent_messages = st.session_state.messages[-8:]
 
     groq_messages = [SYSTEM_MESSAGE] + [
@@ -144,17 +158,6 @@ if user_input:
         for m in recent_messages
         if m["role"] in ("user", "assistant")
     ]
-
-    if web_search:
-        web_data = web_lookup(user_input)
-        groq_messages.append({
-            "role": "system",
-            "content": (
-                "Web search results available.\n"
-                "Summarize clearly and cite sources.\n\n"
-                f"{web_data}"
-            )
-        })
 
     with st.chat_message("assistant"):
         placeholder = st.empty()
