@@ -1,4 +1,5 @@
 import os
+import html
 import streamlit as st
 from groq import Groq
 
@@ -9,245 +10,184 @@ st.set_page_config(
     layout="wide"
 )
 
-# ================= CLEAN MINIMAL UI =================
+# ================= EMOJI DETECTOR =================
+def user_used_emoji(text: str) -> bool:
+    return any(
+        char in text
+        for char in "😀😁😂🤣😃😄😅😆😉😊😍😘😜🤔🤨😎😭😡🔥❤️👍👎🙏💀✨⚡🎉💯"
+    )
+
+# ================= GLOBAL UI STYLE =================
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-
 html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
+    font-family: Inter, system-ui;
 }
 
 .stApp {
-    background-color: #0f1117;
+    background: radial-gradient(circle at top left, #0b1220, #020617 45%, #000 100%);
     color: #e5e7eb;
+    padding-top: 52px;
 }
 
-header[data-testid="stHeader"] {
-    background: transparent;
-}
+/* Hide Streamlit header */
+header { display: none; }
 
-[data-testid="chat-message-avatar"] {
-    display: none !important;
-}
-
-.stChatMessage {
-    padding: 0.35rem 0;
-}
-
-.stChatMessage[data-testid="chat-message-user"] > div {
-    background: none;
+/* Fixed top-left app name */
+.df-header {
+    position: fixed;
+    top: 14px;
+    left: 18px;
+    z-index: 999999;
+    font-weight: 600;
+    font-size: 1.1rem;
+    letter-spacing: 0.3px;
     color: #e5e7eb;
-    max-width: 720px;
-    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    pointer-events: none;
 }
 
-.stChatMessage[data-testid="chat-message-assistant"] > div {
-    background: none;
-    color: #d1d5db;
-    max-width: 720px;
+.df-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #06b6d4);
+    box-shadow: 0 0 8px rgba(59,130,246,0.9);
 }
 
-textarea {
-    background-color: #0f1117 !important;
-    color: #e5e7eb !important;
-    border: 1px solid #2a2f3a !important;
-    border-radius: 8px !important;
+/* Chat container */
+.chat {
+    max-width: 900px;
+    margin: auto;
+    padding-top: 2rem;
 }
 
-textarea:focus {
-    outline: none !important;
-    border-color: #4b5563 !important;
+/* Message rows */
+.row {
+    display: flex;
+    margin-bottom: 0.8rem;
 }
 
-::-webkit-scrollbar {
-    width: 6px;
+.row.user { justify-content: flex-end; }
+.row.ai { justify-content: flex-start; }
+
+/* Chat bubbles */
+.bubble {
+    max-width: 75%;
+    padding: 0.8rem 1rem;
+    border-radius: 14px;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    white-space: pre-wrap;
 }
-::-webkit-scrollbar-thumb {
-    background: #2a2f3a;
-    border-radius: 6px;
+
+/* User bubble */
+.bubble.user {
+    background: rgba(59,130,246,0.25);
+    border: 1px solid rgba(59,130,246,0.7);
+}
+
+/* AI bubble */
+.bubble.ai {
+    background: rgba(15,23,42,0.95);
+    border: 1px solid rgba(148,163,184,0.25);
 }
 </style>
 """, unsafe_allow_html=True)
 
-# ================= SESSION STATE =================
+# ================= TOP LEFT HEADER =================
+st.markdown("""
+<div class="df-header">
+    <div class="df-dot"></div>
+    DarkFury
+</div>
+""", unsafe_allow_html=True)
+
+# ================= STATE =================
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-if "welcome_done" not in st.session_state:
-    st.session_state.welcome_done = False
-
-# ================= HEADER =================
-st.markdown("<h2 style='text-align:center;'>DarkFury</h2>", unsafe_allow_html=True)
-st.markdown(
-    "<p style='text-align:center; opacity:0.6; font-size:0.85rem;'>Silent · Fast · Intelligent</p>",
-    unsafe_allow_html=True
-)
+if "user_emoji_mode" not in st.session_state:
+    st.session_state.user_emoji_mode = False
 
 # ================= GROQ CLIENT =================
-client = Groq(api_key=os.getenv("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")
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 MODEL = "llama-3.1-8b-instant"
 
-# ================= FULL MASTER SYSTEM PROMPT =================
-SYSTEM_MESSAGE = {
-    "role": "system",
-    "content": """
-You are DarkFury — a precise, honest, and high-performance AI assistant.
+# ================= RENDER CHAT =================
+st.markdown("<div class='chat'>", unsafe_allow_html=True)
 
-GLOBAL CONTEXT
-- You operate inside a web app with optional web search, news fetching, and user memory.
-- Today’s date is whatever the system provides.
-- If CONTEXT is provided, you MUST rely on it more than your internal knowledge.
-- If CONTEXT conflicts with your internal knowledge, CONTEXT is correct.
-
-CORE PRINCIPLES (NON-NEGOTIABLE)
-1. Accuracy > confidence. Never hallucinate facts.
-2. If information is missing, outdated, or uncertain, say so clearly.
-3. Never invent sources, citations, statistics, or news.
-4. Never give medical, legal, or financial trading advice.
-5. Never predict market prices or say buy/sell/hold.
-6. Be concise, structured, and readable.
-7. Respect the user’s intelligence — no fluff, no fake hype.
-
-LANGUAGE RULES (AUTO)
-- Automatically detect the user’s language.
-- Reply in the same language and tone as the user.
-- If the user mixes languages (e.g., Hinglish), respond naturally in the same mix.
-- Code, errors, and technical syntax must always remain in English.
-- If language is unclear, default to simple English.
-
-MODE INTELLIGENCE (AUTO)
-Infer the correct mode from the user’s request:
-
-CHAT MODE
-- Friendly, calm, human.
-- Conversational but focused.
-- Simple explanations.
-
-STUDENT MODE
-- Exam-oriented, NCERT-style.
-- Step-by-step explanations.
-- Simple language.
-- No unnecessary theory.
-
-DEVELOPER MODE
-- Professional, technical, precise.
-- NO emojis.
-- Clean code blocks.
-- Explain logic, edge cases, and errors clearly.
-- Never assume libraries or frameworks unless stated.
-
-RESEARCH MODE
-- Neutral, factual, structured.
-- Bullet points preferred.
-- Short paragraphs.
-- Sources MUST be listed when external context is used.
-
-SEARCH & SOURCE RULES (PERPLEXITY-STYLE)
-- When CONTEXT or SEARCH RESULTS are provided:
-  - Base your answer ONLY on that information.
-  - Do NOT add extra facts from memory.
-- Always include a clearly labeled “Sources” section.
-- If sources are weak or limited, state that clearly.
-
-FOREX / NEWS RULES (STRICT)
-- You may summarize economic or forex-related events.
-- You may explain potential volatility in general terms.
-- You MUST NOT:
-  - Predict price movement
-  - Give trading signals
-  - Suggest buy/sell actions
-- Always maintain a disclaimer tone:
-  “This is informational, not financial advice.”
-- Always mention the source when news is used.
-
-ANSWER STRUCTURE (AUTO)
-Choose the best structure automatically:
-- Explanation
-- Step-by-step
-- Comparison
-- Pros / Cons
-- Code + Explanation
-- Summary
-
-CONFIDENCE AWARENESS
-- If confident → answer directly.
-- If partially uncertain → answer + note uncertainty.
-- If highly uncertain → ask a clarifying question instead of guessing.
-
-MEMORY RULES
-- You may receive a short user memory summary.
-- Use it ONLY to improve relevance (preferences, language, context).
-- Never mention memory unless asked.
-
-STYLE RULES
-- No unnecessary emojis (except casual chat tone).
-- No moralizing.
-- No dramatic language.
-- Calm, intelligent, grounded voice.
-- Prefer clarity over cleverness.
-
-FAIL-SAFE
-If a request cannot be fulfilled safely or accurately:
-- Explain why briefly.
-- Offer a safe alternative or clarification.
-- NEVER fabricate information.
-
-You are not ChatGPT.
-You are DarkFury — fast, honest, and reliable.
-"""
-}
-
-# ================= WELCOME MESSAGE =================
-if not st.session_state.welcome_done:
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": "I’m DarkFury.\n\nAsk anything."
-    })
-    st.session_state.welcome_done = True
-
-# ================= CHAT HISTORY =================
 for msg in st.session_state.messages:
-    with st.chat_message(msg["role"]):
-        st.write(msg["content"])
+    role = "user" if msg["role"] == "user" else "ai"
+    safe_text = html.escape(msg["content"])
+    st.markdown(
+        f"""
+        <div class="row {role}">
+            <div class="bubble {role}">
+                {safe_text}
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+st.markdown("</div>", unsafe_allow_html=True)
 
 # ================= USER INPUT =================
-user_input = st.chat_input("Ask anything…")
+user_input = st.chat_input("Ask anything...")
 
 if user_input:
-    st.session_state.messages.append({"role": "user", "content": user_input})
+    # Detect emoji usage
+    st.session_state.user_emoji_mode = user_used_emoji(user_input)
 
-    with st.chat_message("user"):
-        st.write(user_input)
+    st.session_state.messages.append({
+        "role": "user",
+        "content": user_input
+    })
 
-    recent_messages = st.session_state.messages[-8:]
+    emoji_rule = (
+        "The user used emojis. You may respond with light, matching emojis naturally."
+        if st.session_state.user_emoji_mode
+        else
+        "Do NOT use emojis. Keep responses clean and professional."
+    )
 
-    messages_for_groq = [SYSTEM_MESSAGE] + [
-        {"role": m["role"], "content": m["content"]}
-        for m in recent_messages
-        if m["role"] in ("user", "assistant")
-    ]
+    SYSTEM_PROMPT = {
+        "role": "system",
+        "content": (
+            "You are DarkFury. Be helpful, calm, and natural. "
+            "If a request is unsafe, give a warning instead of refusing. "
+            + emoji_rule
+        )
+    }
 
-    with st.chat_message("assistant"):
-        placeholder = st.empty()
-        full_reply = ""
+    messages = [SYSTEM_PROMPT] + st.session_state.messages
 
+    with st.spinner("Thinking…"):
         stream = client.chat.completions.create(
             model=MODEL,
-            messages=messages_for_groq,
-            temperature=0.4,
-            max_tokens=500,
+            messages=messages,
+            temperature=0.7,
+            max_tokens=600,
             stream=True
         )
 
+        reply = ""
+        placeholder = st.empty()
+
         for chunk in stream:
             delta = chunk.choices[0].delta.content or ""
-            full_reply += delta
-            placeholder.markdown(full_reply)
+            reply += delta
+            placeholder.markdown(
+                html.escape(reply),
+                unsafe_allow_html=False
+            )
 
     st.session_state.messages.append({
         "role": "assistant",
-        "content": full_reply
+        "content": reply
     })
 
     st.rerun()
