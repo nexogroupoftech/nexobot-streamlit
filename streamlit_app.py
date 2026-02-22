@@ -519,7 +519,7 @@ if "user_emoji_mode" not in st.session_state:
 
 # ================= GROQ CLIENT =================
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-MODEL = "llama-3.1-8b-instant"
+MODEL = "llama3-8b-8192"
 
 # ================= WELCOME SCREEN =================
 if not st.session_state.messages:
