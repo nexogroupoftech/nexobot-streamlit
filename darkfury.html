@@ -600,10 +600,15 @@ async function sendChat() {
     const proxyUrl = window.location.origin + window.location.pathname + '?action=chat&body=' + encodeURIComponent(JSON.stringify({ messages: [{ role: 'system', content: sysPrompt }, ...msgs] }));
     const res = await fetch(proxyUrl, { credentials: 'include' });
     const text = await res.text();
-    const jsonStart = text.indexOf('{');
-    const data = jsonStart >= 0 ? JSON.parse(text.slice(jsonStart)) : {};
+    let data = {};
+    try {
+      // st.json() wraps in HTML — extract the raw JSON object from the page
+      const match = text.match(/\{[\s\S]*"choices"[\s\S]*\}/) || text.match(/\{[\s\S]*"error"[\s\S]*\}/);
+      if (match) data = JSON.parse(match[0]);
+      else { const s = text.indexOf('{'); if(s>=0) data = JSON.parse(text.slice(s)); }
+    } catch(e) {}
     typEl.remove();
-    const reply = data.choices?.[0]?.message?.content || (data.error ? '⚠ ' + (data.error.message || JSON.stringify(data.error)) : '⚠ No response. Raw: ' + text.slice(0,200));
+    const reply = data.choices?.[0]?.message?.content || (data.error ? '⚠ ' + (data.error.message||JSON.stringify(data.error)) : '⚠ API error. Check your Streamlit logs.');
     conv.messages.push({ role:'assistant', content: reply });
     saveConvos();
     appendAIMsg(reply, conv.persona || currentPersona);
@@ -762,8 +767,12 @@ async function generateImage() {
     const imgUrl = window.location.origin + window.location.pathname + '?action=image&body=' + encodeURIComponent(JSON.stringify({ prompt: p, aspect_ratio: aspect, steps: parseInt(steps) }));
     const res = await fetch(imgUrl, { credentials: 'include' });
     const text2 = await res.text();
-    const jsonStart2 = text2.indexOf('{');
-    const data = jsonStart2 >= 0 ? JSON.parse(text2.slice(jsonStart2)) : {};
+    let data = {};
+    try {
+      const m2 = text2.match(/\{[\s\S]*"artifacts"[\s\S]*\}/) || text2.match(/\{[\s\S]*"images"[\s\S]*\}/) || text2.match(/\{[\s\S]*"error"[\s\S]*\}/);
+      if(m2) data = JSON.parse(m2[0]);
+      else { const s2 = text2.indexOf('{'); if(s2>=0) data = JSON.parse(text2.slice(s2)); }
+    } catch(e) {}
     document.getElementById('img-status').classList.add('hidden');
     let src = null;
     if(data.artifacts?.[0]) { const b=data.artifacts[0].base64||data.artifacts[0].b64_json; if(b) src='data:image/jpeg;base64,'+b; }
