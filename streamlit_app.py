@@ -19,11 +19,11 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-NVIDIA_KEY = "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"
+NVIDIA_KEY = "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"
 
-# Handle API proxy requests
 params = st.query_params
 
+# ── CHAT PROXY ──────────────────────────────────────────────
 if params.get("action") == "chat":
     try:
         body = json.loads(params.get("body", "{}"))
@@ -36,7 +36,7 @@ if params.get("action") == "chat":
             json={
                 "model": "moonshotai/kimi-k2-instruct",
                 "messages": body.get("messages", []),
-                "temperature": 0.7,
+                "temperature": 0.6,
                 "top_p": 0.9,
                 "max_tokens": 4096
             },
@@ -47,6 +47,7 @@ if params.get("action") == "chat":
         st.json({"error": {"message": str(e)}})
     st.stop()
 
+# ── IMAGE PROXY ─────────────────────────────────────────────
 elif params.get("action") == "image":
     try:
         body = json.loads(params.get("body", "{}"))
@@ -72,62 +73,14 @@ elif params.get("action") == "image":
         st.json({"error": {"message": str(e)}})
     st.stop()
 
-# Render the UI
+# ── RENDER UI ───────────────────────────────────────────────
 html_path = os.path.join(os.path.dirname(__file__), "darkfury.html")
 
 if not os.path.exists(html_path):
-    st.error("darkfury.html not found. Upload it to the same repo folder as streamlit_app.py")
+    st.error("darkfury.html not found. Make sure it's in the same folder as streamlit_app.py")
     st.stop()
 
 with open(html_path, "r", encoding="utf-8") as f:
     html = f.read()
-
-# Proxy script — routes API calls through Python backend to avoid CORS
-proxy_script = """
-<script>
-const _SL = window.parent.location.href.split('?')[0];
-
-async function callNvidiaChat(messages, systemPrompt) {
-    try {
-        const payload = JSON.stringify({ messages: [{role:'system',content:systemPrompt},...messages] });
-        const url = _SL + '?action=chat&body=' + encodeURIComponent(payload);
-        const res = await fetch(url, { credentials: 'include' });
-        const text = await res.text();
-        const m = text.match(/\{".*?\}/s);
-        if (m) { try { return JSON.parse(m[0]); } catch(e) {} }
-        const start = text.indexOf('{"');
-        if (start >= 0) { try { return JSON.parse(text.slice(start)); } catch(e) {} }
-        return { error: { message: 'Parse error: ' + text.slice(0,300) } };
-    } catch(e) { return { error: { message: e.message } }; }
-}
-
-async function callNvidiaImage(prompt, aspect, steps, seed) {
-    try {
-        const payload = JSON.stringify({ prompt, aspect_ratio: aspect, steps, seed });
-        const url = _SL + '?action=image&body=' + encodeURIComponent(payload);
-        const res = await fetch(url, { credentials: 'include' });
-        const text = await res.text();
-        const start = text.indexOf('{"');
-        if (start >= 0) { try { return JSON.parse(text.slice(start)); } catch(e) {} }
-        return { error: { message: 'Parse error' } };
-    } catch(e) { return { error: { message: e.message } }; }
-}
-</script>
-"""
-
-# Patch chat fetch
-html = html.replace(
-    "await fetch('https://integrate.api.nvidia.com/v1/chat/completions',{\n      method:'POST',\n      headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY},\n      body:JSON.stringify({model:'moonshotai/kimi-k2-instruct',messages:[{role:'system',content:personas[currentPersona].system},...msgs],temperature:0.7,top_p:0.9,max_tokens:4096})\n    });\n    const data=await res.json();",
-    "const data=await callNvidiaChat(msgs, personas[currentPersona].system);"
-)
-
-# Patch image fetch
-html = html.replace(
-    "await fetch('https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-dev',{\n      method:'POST',\n      headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY,'Accept':'application/json'},\n      body:JSON.stringify({prompt:p,cfg_scale:7.5,aspect_ratio:aspect,seed:Math.floor(Math.random()*99999),steps:parseInt(steps),negative_prompt:'blurry, low quality, distorted, ugly, watermark'})\n    });\n    const data=await res.json();",
-    "const data=await callNvidiaImage(p, aspect, parseInt(steps), Math.floor(Math.random()*99999));"
-)
-
-# Inject proxy before </head>
-html = html.replace("</head>", proxy_script + "\n</head>")
 
 st.components.v1.html(html, height=900, scrolling=True)
