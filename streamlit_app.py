@@ -23,23 +23,14 @@ NVIDIA_KEY = "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
 
 params = st.query_params
 
-# ── CHAT PROXY ──────────────────────────────────────────────
 if params.get("action") == "chat":
     try:
         body = json.loads(params.get("body", "{}"))
         res = requests.post(
             "https://integrate.api.nvidia.com/v1/chat/completions",
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {NVIDIA_KEY}"
-            },
-            json={
-                "model": "moonshotai/kimi-k2-instruct",
-                "messages": body.get("messages", []),
-                "temperature": 0.6,
-                "top_p": 0.9,
-                "max_tokens": 4096
-            },
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {NVIDIA_KEY}"},
+            json={"model": "moonshotai/kimi-k2-instruct", "messages": body.get("messages", []),
+                  "temperature": 0.6, "top_p": 0.9, "max_tokens": 4096},
             timeout=60
         )
         st.json(res.json())
@@ -47,25 +38,16 @@ if params.get("action") == "chat":
         st.json({"error": {"message": str(e)}})
     st.stop()
 
-# ── IMAGE PROXY ─────────────────────────────────────────────
 elif params.get("action") == "image":
     try:
         body = json.loads(params.get("body", "{}"))
         res = requests.post(
             "https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-dev",
-            headers={
-                "Content-Type": "application/json",
-                "Authorization": f"Bearer {NVIDIA_KEY}",
-                "Accept": "application/json"
-            },
-            json={
-                "prompt": body.get("prompt", ""),
-                "cfg_scale": 7.5,
-                "aspect_ratio": body.get("aspect_ratio", "16:9"),
-                "seed": body.get("seed", 42),
-                "steps": body.get("steps", 30),
-                "negative_prompt": "blurry, low quality, distorted, ugly, watermark"
-            },
+            headers={"Content-Type": "application/json", "Authorization": f"Bearer {NVIDIA_KEY}", "Accept": "application/json"},
+            json={"prompt": body.get("prompt", ""), "cfg_scale": 7.5,
+                  "aspect_ratio": body.get("aspect_ratio", "16:9"),
+                  "seed": body.get("seed", 42), "steps": body.get("steps", 30),
+                  "negative_prompt": "blurry, low quality, distorted, ugly, watermark"},
             timeout=120
         )
         st.json(res.json())
@@ -73,11 +55,9 @@ elif params.get("action") == "image":
         st.json({"error": {"message": str(e)}})
     st.stop()
 
-# ── RENDER UI ───────────────────────────────────────────────
 html_path = os.path.join(os.path.dirname(__file__), "darkfury.html")
-
 if not os.path.exists(html_path):
-    st.error("darkfury.html not found. Make sure it's in the same folder as streamlit_app.py")
+    st.error("darkfury.html not found.")
     st.stop()
 
 with open(html_path, "r", encoding="utf-8") as f:
