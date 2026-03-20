@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>DarkFury · NexoCorp AI</title>
+<title>DarkFury · NexoCorp AI V2.0</title>
 <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800;900&family=Public+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
 <script id="tailwind-config">
   tailwind.config = {
@@ -13,564 +13,798 @@
     theme: {
       extend: {
         colors: {
-          "primary": "#a4e6ff","primary-container": "#00d1ff","primary-fixed": "#b7eaff","primary-fixed-dim": "#4cd6ff","on-primary": "#003543","on-primary-container": "#00566a","on-primary-fixed": "#001f28","on-primary-fixed-variant": "#004e60",
-          "secondary": "#c8c6c5","secondary-container": "#474746","secondary-fixed": "#e5e2e1","secondary-fixed-dim": "#c8c6c5","on-secondary": "#313030","on-secondary-container": "#b7b5b4","on-secondary-fixed": "#1c1b1b","on-secondary-fixed-variant": "#474746",
-          "tertiary": "#ffd59c","tertiary-container": "#feb127","on-tertiary": "#442b00","on-tertiary-container": "#6b4700",
-          "surface": "#131313","surface-dim": "#131313","surface-bright": "#3a3939","surface-container-lowest": "#0e0e0e","surface-container-low": "#1c1b1b","surface-container": "#201f1f","surface-container-high": "#2a2a2a","surface-container-highest": "#353534","surface-variant": "#353534","surface-tint": "#4cd6ff",
-          "on-surface": "#e5e2e1","on-surface-variant": "#bbc9cf","background": "#131313","on-background": "#e5e2e1","outline": "#859399","outline-variant": "#3c494e","inverse-surface": "#e5e2e1","inverse-on-surface": "#313030","inverse-primary": "#00677f",
-          "error": "#ffb4ab","error-container": "#93000a","on-error": "#690005","on-error-container": "#ffdad6"
+          surface: "#0e0e0e",
+          panel: "#191919",
+          card: "#1f1f1f",
+          accent: "#262626",
+          bright: "#2c2c2c",
+          primary: "#c6c6c7",
+          muted: "#ababab",
+          faint: "#666666",
+          cyan: "#a4e6ff",
+          "cyan-dim": "#4cd6ff",
+          gold: "#ffd59c",
         },
-        fontFamily: { "headline": ["Space Grotesk"], "body": ["Inter"], "label": ["Inter"] },
-        borderRadius: { "DEFAULT": "0.125rem","lg": "0.25rem","xl": "0.5rem","2xl": "0.75rem","full": "9999px" }
-      }
-    }
+        fontFamily: {
+          headline: ["Manrope", "sans-serif"],
+          body: ["Public Sans", "sans-serif"],
+          label: ["Public Sans", "sans-serif"],
+        },
+        borderRadius: {
+          DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", "2xl": "1rem", "3xl": "1.5rem", full: "9999px",
+        },
+      },
+    },
   }
 </script>
 <style>
-  .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  .fill-icon { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-  body { background-color: #131313; color: #e5e2e1; font-family: 'Inter', sans-serif; }
-  .glass-sidebar { backdrop-filter: blur(20px); background-color: rgba(32,31,31,0.92); }
-  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-  .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a2a2a; border-radius: 10px; }
-  .thought-stream-pulse { animation: tsPulse 2s ease-in-out infinite; }
-  @keyframes tsPulse { 0%,100%{box-shadow:0 0 8px rgba(255,213,156,0.3);opacity:1}50%{box-shadow:0 0 20px rgba(255,213,156,0.7);opacity:0.6} }
-  .msg-enter { animation: msgIn 0.3s ease; }
-  @keyframes msgIn { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
-  .typing-dot { animation: typingBounce 1.2s infinite; }
-  .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-  .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)} }
-  pre { background:#0e0e0e;border-left:3px solid #a4e6ff;padding:1rem;overflow-x:auto;border-radius:0.25rem;margin:0.75rem 0;font-family:'Space Grotesk',monospace;font-size:0.8rem; }
-  code { font-family:'Space Grotesk',monospace;font-size:0.82em;background:rgba(164,230,255,0.08);padding:1px 5px;border-radius:2px; }
-  pre code { background:none;padding:0; }
-  .prose strong { color:#e5e2e1;font-weight:600; }
-  ul.ai-list { list-style:disc;padding-left:1.25rem;margin:0.5rem 0; }
-  ul.ai-list li { margin:0.25rem 0; }
-  .input-glow:focus-within .glow-layer { opacity:1; }
+  *{box-sizing:border-box}
+  body{background:#0e0e0e;color:#c6c6c7;font-family:'Public Sans',sans-serif;overflow:hidden;height:100vh}
+  .ms{font-family:'Material Symbols Outlined';font-variation-settings:'FILL' 0,'wght' 400,'GRAD' 0,'opsz' 24;font-style:normal;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr}
+  .ms-fill{font-variation-settings:'FILL' 1,'wght' 400,'GRAD' 0,'opsz' 24}
+  ::-webkit-scrollbar{width:3px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#262626;border-radius:10px}
+  .typing-dot{animation:tdot 1.2s infinite}
+  .typing-dot:nth-child(2){animation-delay:.2s}
+  .typing-dot:nth-child(3){animation-delay:.4s}
+  @keyframes tdot{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+  .msg-in{animation:msgin .25s ease}
+  @keyframes msgin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .pulse-glow{animation:pglow 2s ease-in-out infinite}
+  @keyframes pglow{0%,100%{opacity:1;box-shadow:0 0 8px rgba(166,140,255,.3)}50%{opacity:.5;box-shadow:0 0 20px rgba(166,140,255,.7)}}
+  pre{background:#111;border-left:2px solid #a4e6ff;padding:1rem;overflow-x:auto;border-radius:.5rem;margin:.75rem 0;font-family:'Manrope',monospace;font-size:.8rem;color:#c6c6c7}
+  code{font-family:'Manrope',monospace;font-size:.82em;background:rgba(164,230,255,.08);padding:1px 5px;border-radius:2px}
+  pre code{background:none;padding:0}
+  .view{display:none;flex:1;flex-direction:column;overflow:hidden}
+  .view.active{display:flex}
+  textarea:focus{outline:none;box-shadow:none}
+  input:focus{outline:none}
+  .nav-btn.active-nav{background:#262626;color:#c6c6c7}
+  .think-toggle.on .track{background:#a68cff}
+  .think-toggle.on .thumb{transform:translateX(16px);background:#fff}
 </style>
 </head>
-<body class="flex h-screen overflow-hidden selection:bg-primary/20">
+<body>
+<div class="flex h-screen w-full overflow-hidden">
 
-<!-- SIDEBAR -->
-<aside id="sidebar" class="fixed left-0 top-0 h-full w-64 glass-sidebar border-r border-white/5 z-40 flex flex-col p-4 gap-1 transition-transform duration-300">
-  <div class="mb-4 px-3 pt-3">
-    <h2 class="text-xl font-black text-white font-headline tracking-tighter">Dark<span class="text-primary">Fury</span></h2>
-    <p class="text-[10px] uppercase tracking-widest text-primary/60 font-label mt-0.5">NexoCorp · AI V2.0</p>
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside id="sidebar" class="h-screen w-64 flex flex-col sticky left-0 top-0 bg-[#191919] py-6 px-3 gap-y-1 transition-all duration-300 z-50 shrink-0">
+  <!-- Logo -->
+  <div class="px-3 flex items-center gap-3 mb-4">
+    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
+      <span class="ms ms-fill text-black" style="font-size:18px">bolt</span>
+    </div>
+    <div>
+      <div class="font-headline font-black text-white tracking-tighter text-base leading-none">Dark<span style="color:#a4e6ff">Fury</span></div>
+      <div class="text-[9px] uppercase tracking-[.2em] text-[#555] mt-0.5">NexoCorp · AI V2.0</div>
+    </div>
   </div>
+
+  <!-- New Chat -->
+  <button onclick="newChat()" class="mx-1 mb-2 py-2.5 px-4 bg-[#262626] hover:bg-[#2c2c2c] text-[#e5e5e5] rounded-xl font-headline font-semibold text-sm flex items-center gap-3 transition-all active:scale-95">
+    <span class="ms" style="font-size:18px">add_comment</span>New Chat
+  </button>
+
+  <!-- Nav -->
   <nav class="flex flex-col gap-0.5">
-    <button onclick="newChat()" class="text-gray-400 hover:bg-surface-container-high/60 px-4 py-2.5 rounded-xl flex items-center gap-3 hover:translate-x-0.5 transition-all duration-200 w-full text-left text-sm font-medium">
-      <span class="material-symbols-outlined text-[18px]">add_comment</span>New Chat
+    <button onclick="showView('chat')" id="nav-chat" class="nav-btn active-nav flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-[#262626]/60 w-full text-left text-[#ababab] hover:text-white">
+      <span class="ms" style="font-size:18px">chat</span>Chat
     </button>
-    <button onclick="showView('history')" id="nav-history" class="text-gray-400 hover:bg-surface-container-high/60 px-4 py-2.5 rounded-xl flex items-center gap-3 hover:translate-x-0.5 transition-all duration-200 w-full text-left text-sm font-medium">
-      <span class="material-symbols-outlined text-[18px]">history</span>History
+    <button onclick="showView('image')" id="nav-image" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-[#262626]/60 w-full text-left text-[#ababab] hover:text-white">
+      <span class="ms" style="font-size:18px">image</span>Image Gen
     </button>
-    <button onclick="showView('image')" id="nav-image" class="text-gray-400 hover:bg-surface-container-high/60 px-4 py-2.5 rounded-xl flex items-center gap-3 hover:translate-x-0.5 transition-all duration-200 w-full text-left text-sm font-medium">
-      <span class="material-symbols-outlined text-[18px]">image</span>Image Gen
+    <button onclick="showView('history')" id="nav-history" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-[#262626]/60 w-full text-left text-[#ababab] hover:text-white">
+      <span class="ms" style="font-size:18px">history</span>History
     </button>
-    <button onclick="showView('settings')" id="nav-settings" class="text-gray-400 hover:bg-surface-container-high/60 px-4 py-2.5 rounded-xl flex items-center gap-3 hover:translate-x-0.5 transition-all duration-200 w-full text-left text-sm font-medium">
-      <span class="material-symbols-outlined text-[18px]">tune</span>Settings
+    <button onclick="showView('pricing')" id="nav-pricing" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-[#262626]/60 w-full text-left text-[#ababab] hover:text-white">
+      <span class="ms" style="font-size:18px">payments</span>Pricing
+    </button>
+    <button onclick="showView('settings')" id="nav-settings" class="nav-btn flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all hover:bg-[#262626]/60 w-full text-left text-[#ababab] hover:text-white">
+      <span class="ms" style="font-size:18px">tune</span>Settings
     </button>
   </nav>
+
+  <!-- Persona -->
   <div class="mt-3 px-1">
-    <span class="text-[10px] uppercase tracking-[0.2em] text-gray-600 font-label px-3 block mb-1.5">Persona</span>
-    <div id="persona-list"></div>
+    <div class="text-[9px] uppercase tracking-[.2em] text-[#444] px-3 mb-1.5">Persona</div>
+    <div id="persona-sidebar"></div>
   </div>
+
+  <!-- Recent -->
   <div class="mt-3 px-1 flex-1 overflow-hidden flex flex-col min-h-0">
-    <span class="text-[10px] uppercase tracking-[0.2em] text-gray-600 font-label px-3 block mb-1.5">Recent</span>
-    <div id="history-list" class="flex flex-col gap-0.5 overflow-y-auto custom-scrollbar flex-1"></div>
+    <div class="text-[9px] uppercase tracking-[.2em] text-[#444] px-3 mb-1.5">Recent</div>
+    <div id="recent-list" class="flex flex-col gap-0.5 overflow-y-auto flex-1"></div>
   </div>
-  <div class="mt-auto pt-3 border-t border-white/5 flex flex-col gap-2">
-    <div class="bg-surface-container-high px-4 py-3 rounded-xl">
+
+  <!-- Bottom -->
+  <div class="mt-auto pt-3 border-t border-[#1e1e1e] flex flex-col gap-2">
+    <div class="bg-[#141414] px-3 py-2.5 rounded-xl">
       <div class="flex justify-between items-center mb-1.5">
-        <span class="text-[10px] uppercase tracking-widest text-gray-500">Model</span>
-        <span class="text-[10px] text-primary font-bold">KIMI-K2</span>
+        <span class="text-[9px] uppercase tracking-widest text-[#444]">Model</span>
+        <span class="text-[9px] font-black text-[#a4e6ff]">KIMI-K2</span>
       </div>
-      <div class="h-0.5 w-full bg-surface rounded-full overflow-hidden">
-        <div class="h-full bg-gradient-to-r from-primary to-primary-container w-full"></div>
+      <div class="h-0.5 w-full bg-[#262626] rounded-full overflow-hidden">
+        <div class="h-full w-full" style="background:linear-gradient(90deg,#a4e6ff,#4cd6ff)"></div>
       </div>
     </div>
-    <button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary px-4 py-2.5 rounded-xl font-bold text-sm font-headline tracking-tight transition-transform active:scale-95 hover:opacity-90">
+    <button onclick="showView('pricing')" class="w-full py-2.5 rounded-xl font-headline font-bold text-sm text-black transition-all active:scale-95 hover:opacity-90" style="background:linear-gradient(135deg,#a4e6ff,#4cd6ff)">
       Upgrade to Pro
     </button>
   </div>
 </aside>
 
-<!-- MAIN -->
-<main id="main-area" class="flex-1 ml-64 flex flex-col h-screen bg-surface relative overflow-hidden">
-  <!-- HEADER -->
-  <header id="main-header" class="fixed top-0 right-0 left-64 z-30 bg-surface/95 backdrop-blur-sm px-8 py-3.5 flex justify-between items-center border-b border-surface-container transition-all duration-300">
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="flex-1 flex flex-col overflow-hidden bg-[#0e0e0e]">
+
+  <!-- Header -->
+  <header class="px-8 py-3.5 flex justify-between items-center border-b border-[#191919] bg-[#0e0e0e]/95 backdrop-blur-sm z-30">
     <div class="flex items-center gap-3">
-      <button onclick="toggleSidebar()" class="text-gray-500 hover:text-primary transition-colors p-1">
-        <span class="material-symbols-outlined text-[20px]">menu</span>
+      <button onclick="toggleSidebar()" class="text-[#555] hover:text-[#a4e6ff] transition-colors">
+        <span class="ms" style="font-size:20px">menu</span>
       </button>
       <div>
-        <h1 id="header-title" class="text-sm font-bold font-headline tracking-tight text-primary">DarkFury</h1>
-        <p id="header-sub" class="text-[10px] uppercase tracking-widest text-gray-600 font-label">Chat Workspace</p>
+        <div id="hdr-title" class="text-sm font-headline font-bold text-[#a4e6ff]">DarkFury</div>
+        <div id="hdr-sub" class="text-[9px] uppercase tracking-widest text-[#444]">Chat Workspace</div>
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <div id="persona-chips" class="hidden md:flex gap-1.5"></div>
-      <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-surface-container-high to-surface-container-highest border border-white/10 flex items-center justify-center ml-2">
-        <span class="material-symbols-outlined text-primary" style="font-size:16px">person</span>
+      <div id="persona-chips" class="hidden md:flex gap-1"></div>
+      <div class="w-8 h-8 rounded-full bg-[#262626] border border-[#333] flex items-center justify-center ml-2">
+        <span class="ms text-[#a4e6ff]" style="font-size:15px">person</span>
       </div>
     </div>
   </header>
 
-  <!-- CHAT VIEW -->
-  <div id="view-chat" class="flex-1 flex flex-col pt-14 h-full overflow-hidden">
-    <section id="messages" class="flex-1 overflow-y-auto custom-scrollbar px-6 md:px-10 py-8">
-      <div class="max-w-3xl mx-auto flex flex-col gap-10">
-        <div id="welcome-state" class="py-16 flex flex-col items-center text-center space-y-5">
-          <div class="w-16 h-16 bg-surface-container-high rounded-2xl flex items-center justify-center mb-3 border border-white/5">
-            <span class="material-symbols-outlined text-primary fill-icon" style="font-size:32px">auto_awesome</span>
+  <!-- ──── CHAT VIEW ──── -->
+  <div id="view-chat" class="view active">
+    <div id="messages" class="flex-1 overflow-y-auto px-8 py-10">
+      <div class="max-w-3xl mx-auto flex flex-col gap-12">
+
+        <!-- Welcome -->
+        <div id="welcome-state" class="py-16 flex flex-col items-center text-center gap-5">
+          <div class="w-16 h-16 bg-[#191919] rounded-2xl flex items-center justify-center border border-[#262626]">
+            <span class="ms ms-fill text-[#a4e6ff]" style="font-size:30px">auto_awesome</span>
           </div>
-          <h2 class="text-4xl font-headline font-black tracking-tighter text-white">How can we architect<br/><span class="text-primary">your next breakthrough?</span></h2>
-          <p class="text-gray-500 max-w-md font-body text-sm leading-relaxed">DarkFury is powered by Kimi-K2 via NVIDIA NIM — sharp, precise, doesn't sugarcoat.</p>
+          <div>
+            <h2 class="text-4xl font-headline font-black tracking-tighter text-white leading-tight">How can we architect<br/><span style="color:#a4e6ff">your next breakthrough?</span></h2>
+            <p class="text-[#555] text-sm mt-3 max-w-md mx-auto leading-relaxed">DarkFury is powered by Kimi-K2 via NVIDIA NIM — sharp, precise, doesn't sugarcoat.</p>
+          </div>
           <div class="grid grid-cols-2 md:grid-cols-3 gap-3 w-full max-w-2xl mt-2">
-            <button onclick="quickSend('Write me a Python web scraper with BeautifulSoup')" class="bg-surface-container-low hover:bg-surface-container border border-white/5 hover:border-primary/30 p-4 rounded-xl text-left text-xs text-gray-400 hover:text-white transition-all duration-200">
-              <span class="material-symbols-outlined text-primary text-sm mb-2 block">code</span>Write Python scraper
+            <button onclick="quickSend('Write me a Python web scraper with BeautifulSoup')" class="bg-[#191919] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#a4e6ff]/20 p-4 rounded-xl text-left transition-all">
+              <span class="ms text-[#a4e6ff] block mb-2" style="font-size:16px">code</span>
+              <span class="text-xs text-[#ababab]">Write Python scraper</span>
             </button>
-            <button onclick="quickSend('Explain quantum computing in simple terms')" class="bg-surface-container-low hover:bg-surface-container border border-white/5 hover:border-primary/30 p-4 rounded-xl text-left text-xs text-gray-400 hover:text-white transition-all duration-200">
-              <span class="material-symbols-outlined text-primary text-sm mb-2 block">science</span>Explain quantum computing
+            <button onclick="quickSend('Explain quantum computing in simple terms')" class="bg-[#191919] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#a4e6ff]/20 p-4 rounded-xl text-left transition-all">
+              <span class="ms text-[#a4e6ff] block mb-2" style="font-size:16px">science</span>
+              <span class="text-xs text-[#ababab]">Explain quantum computing</span>
             </button>
-            <button onclick="quickSend('Brainstorm 5 disruptive AI startup ideas')" class="bg-surface-container-low hover:bg-surface-container border border-white/5 hover:border-primary/30 p-4 rounded-xl text-left text-xs text-gray-400 hover:text-white transition-all duration-200">
-              <span class="material-symbols-outlined text-primary text-sm mb-2 block">lightbulb</span>Startup ideas
+            <button onclick="quickSend('Brainstorm 5 disruptive AI startup ideas for 2025')" class="bg-[#191919] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#a4e6ff]/20 p-4 rounded-xl text-left transition-all">
+              <span class="ms text-[#a4e6ff] block mb-2" style="font-size:16px">lightbulb</span>
+              <span class="text-xs text-[#ababab]">Startup ideas</span>
             </button>
-            <button onclick="quickSend('What are the latest trends in machine learning in 2025?')" class="bg-surface-container-low hover:bg-surface-container border border-white/5 hover:border-primary/30 p-4 rounded-xl text-left text-xs text-gray-400 hover:text-white transition-all duration-200">
-              <span class="material-symbols-outlined text-primary text-sm mb-2 block">trending_up</span>ML trends 2025
+            <button onclick="quickSend('What are the latest trends in machine learning in 2025?')" class="bg-[#191919] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#a4e6ff]/20 p-4 rounded-xl text-left transition-all">
+              <span class="ms text-[#a4e6ff] block mb-2" style="font-size:16px">trending_up</span>
+              <span class="text-xs text-[#ababab]">ML trends 2025</span>
             </button>
-            <button onclick="quickSend('Debug: TypeError cannot read properties of undefined')" class="bg-surface-container-low hover:bg-surface-container border border-white/5 hover:border-primary/30 p-4 rounded-xl text-left text-xs text-gray-400 hover:text-white transition-all duration-200">
-              <span class="material-symbols-outlined text-primary text-sm mb-2 block">bug_report</span>Debug a TypeError
+            <button onclick="quickSend('Help me debug: TypeError cannot read properties of undefined')" class="bg-[#191919] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#a4e6ff]/20 p-4 rounded-xl text-left transition-all">
+              <span class="ms text-[#a4e6ff] block mb-2" style="font-size:16px">bug_report</span>
+              <span class="text-xs text-[#ababab]">Debug a TypeError</span>
             </button>
-            <button onclick="quickSend('Roast my productivity habits brutally and honestly')" class="bg-surface-container-low hover:bg-surface-container border border-white/5 hover:border-primary/30 p-4 rounded-xl text-left text-xs text-gray-400 hover:text-white transition-all duration-200">
-              <span class="material-symbols-outlined text-primary text-sm mb-2 block">local_fire_department</span>Roast my habits
+            <button onclick="quickSend('Roast my productivity habits brutally and honestly')" class="bg-[#191919] hover:bg-[#1f1f1f] border border-[#262626] hover:border-[#a4e6ff]/20 p-4 rounded-xl text-left transition-all">
+              <span class="ms text-[#a4e6ff] block mb-2" style="font-size:16px">local_fire_department</span>
+              <span class="text-xs text-[#ababab]">Roast my habits</span>
             </button>
           </div>
         </div>
+
         <div id="msg-stream"></div>
       </div>
-    </section>
-    <!-- Input -->
-    <div class="px-6 md:px-10 pb-6 pt-4 bg-surface border-t border-surface-container">
-      <div class="max-w-3xl mx-auto input-glow">
-        <div class="relative group">
-          <div class="glow-layer absolute -inset-1 bg-gradient-to-r from-primary/10 to-primary-container/10 rounded-2xl blur-lg opacity-0 transition-opacity duration-300"></div>
-          <div class="relative bg-surface-container-highest/80 backdrop-blur-xl border border-white/5 rounded-2xl p-2">
-            <textarea id="user-input" rows="1"
-              class="w-full bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 px-4 pt-3.5 pb-2 min-h-[52px] max-h-[160px] resize-none font-body text-sm leading-relaxed outline-none"
-              placeholder="Architect your next command..."
-              onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
-            <div class="flex justify-between items-center px-4 pb-2">
-              <div class="flex gap-0.5">
-                <button onclick="showView('image')" class="p-2 text-gray-500 hover:text-primary transition-colors rounded-lg hover:bg-white/5" title="Image Gen">
-                  <span class="material-symbols-outlined text-[20px]">image</span>
-                </button>
-                <button onclick="clearChat()" class="p-2 text-gray-500 hover:text-primary transition-colors rounded-lg hover:bg-white/5" title="Clear">
-                  <span class="material-symbols-outlined text-[20px]">delete_sweep</span>
-                </button>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="px-8 pb-6 pt-3 bg-[#0e0e0e] border-t border-[#191919]">
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-[#111] rounded-2xl p-4 flex flex-col gap-3 border border-[#262626] shadow-2xl transition-all focus-within:border-[#333]">
+          <textarea id="chat-input" rows="1"
+            class="bg-transparent border-none text-white placeholder-[#444] w-full resize-none font-headline text-base py-1 leading-relaxed"
+            style="max-height:160px"
+            placeholder="Architect your next command..."
+            onkeydown="handleChatKey(event)" oninput="resizeChatInput(this)"></textarea>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <!-- Think Harder Toggle -->
+              <div class="think-toggle flex items-center gap-2 bg-black px-3 py-1.5 rounded-full border border-[#262626] cursor-pointer select-none" onclick="toggleThink(this)">
+                <span class="text-[9px] font-black text-[#ababab] tracking-widest uppercase">Think Harder</span>
+                <div class="relative w-8 h-4">
+                  <div class="track w-full h-full bg-[#262626] rounded-full transition-colors"></div>
+                  <div class="thumb absolute left-0.5 top-0.5 w-3 h-3 bg-[#ababab] rounded-full transition-transform"></div>
+                </div>
               </div>
-              <div class="flex items-center gap-3">
-                <span id="char-counter" class="text-[10px] text-gray-600 uppercase tracking-widest font-label hidden sm:block">0 / 4000</span>
-                <button id="send-btn" onclick="sendMessage()"
-                  class="bg-primary text-on-primary w-10 h-10 rounded-xl flex items-center justify-center hover:bg-primary-container transition-all active:scale-95 shadow-lg shadow-primary/20 disabled:opacity-40">
-                  <span class="material-symbols-outlined">arrow_upward</span>
-                </button>
-              </div>
+              <button onclick="clearChat()" class="text-[#555] hover:text-[#ababab] transition-colors" title="Clear">
+                <span class="ms" style="font-size:18px">delete_sweep</span>
+              </button>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="char-count" class="text-[9px] text-[#333] uppercase tracking-widest">0 / 4000</span>
+              <button id="send-btn" onclick="sendChat()"
+                class="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center hover:scale-105 transition-transform active:scale-95 disabled:opacity-40">
+                <span class="ms font-bold" style="font-size:18px">arrow_upward</span>
+              </button>
             </div>
           </div>
-          <p class="text-[10px] text-center text-gray-600 mt-3 uppercase tracking-[0.2em] font-label">Kimi-K2 · NVIDIA NIM · NexoCorp DarkFury V2</p>
         </div>
+        <p class="text-[9px] text-center text-[#333] mt-3 uppercase tracking-[.2em]">Kimi-K2 · NVIDIA NIM · NexoCorp DarkFury V2</p>
       </div>
     </div>
   </div>
 
-  <!-- HISTORY VIEW -->
-  <div id="view-history" class="hidden flex-1 overflow-y-auto custom-scrollbar pt-14 px-8 md:px-12 py-8">
-    <div class="max-w-4xl mx-auto">
-      <div class="mb-12">
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-2 block font-label">NexoCorp Archive</span>
-        <h1 class="text-5xl font-black font-headline tracking-tighter text-white">Workspace History</h1>
-      </div>
-      <div id="history-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-      <div id="history-empty" class="hidden py-20 text-center">
-        <span class="material-symbols-outlined text-gray-600 block mb-4" style="font-size:48px">history</span>
-        <p class="text-gray-500 text-sm font-body">No conversations yet. Start a new chat!</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- IMAGE VIEW -->
-  <div id="view-image" class="hidden flex-1 overflow-y-auto custom-scrollbar pt-14 px-8 md:px-12 py-8">
+  <!-- ──── IMAGE VIEW ──── -->
+  <div id="view-image" class="view overflow-y-auto px-8 py-10">
     <div class="max-w-3xl mx-auto">
       <div class="mb-8">
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-tertiary/70 mb-2 block font-label">FLUX.1-dev · NVIDIA NIM</span>
-        <h1 class="text-4xl font-black font-headline tracking-tighter text-white">Image <span class="text-primary">Generator</span></h1>
-        <p class="text-gray-500 text-sm mt-2 font-body">Generate photorealistic images using FLUX.1-dev — one of the world's best diffusion models.</p>
+        <span class="text-[9px] font-black uppercase tracking-[.2em] text-[#ffd59c]/60 block mb-2">FLUX.1-dev · NVIDIA NIM</span>
+        <h1 class="text-4xl font-headline font-black tracking-tighter text-white">Image <span style="color:#a4e6ff">Generator</span></h1>
+        <p class="text-[#555] text-sm mt-2">Generate photorealistic images using FLUX.1-dev — one of the world's best diffusion models.</p>
       </div>
-      <div class="relative group mb-5">
-        <div class="absolute -inset-1 bg-gradient-to-r from-tertiary/10 to-primary/10 rounded-2xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
-        <div class="relative bg-surface-container-highest border border-white/5 rounded-2xl p-4 flex flex-col md:flex-row gap-3 items-end">
-          <textarea id="img-prompt" rows="3"
-            class="flex-1 bg-transparent border-none focus:ring-0 text-white placeholder-gray-500 resize-none outline-none font-body text-sm leading-relaxed w-full"
-            placeholder="Describe your image... (e.g. 'A futuristic city at night with neon lights reflecting off wet streets, cinematic lighting, 8K')"></textarea>
+      <div class="bg-[#111] rounded-2xl p-4 border border-[#262626] mb-4">
+        <textarea id="img-prompt" rows="3"
+          class="w-full bg-transparent border-none text-white placeholder-[#444] resize-none font-headline text-base leading-relaxed mb-4"
+          placeholder="Describe your image... (e.g. 'A futuristic city at night with neon lights, cinematic 8K')"></textarea>
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div class="flex gap-3 flex-wrap">
+            <div class="bg-[#1f1f1f] rounded-xl px-3 py-2 flex items-center gap-2">
+              <span class="text-[9px] uppercase tracking-widest text-[#555]">Aspect</span>
+              <select id="img-aspect" class="bg-transparent text-[#a4e6ff] text-xs font-bold border-none cursor-pointer">
+                <option value="16:9">16:9 Wide</option>
+                <option value="1:1">1:1 Square</option>
+                <option value="9:16">9:16 Portrait</option>
+                <option value="4:3">4:3 Standard</option>
+              </select>
+            </div>
+            <div class="bg-[#1f1f1f] rounded-xl px-3 py-2 flex items-center gap-2">
+              <span class="text-[9px] uppercase tracking-widest text-[#555]">Steps</span>
+              <select id="img-steps" class="bg-transparent text-[#a4e6ff] text-xs font-bold border-none cursor-pointer">
+                <option value="20">20 Fast</option>
+                <option value="30" selected>30 Balanced</option>
+                <option value="50">50 Quality</option>
+              </select>
+            </div>
+          </div>
           <button onclick="generateImage()" id="gen-btn"
-            class="bg-gradient-to-br from-tertiary to-tertiary-container text-on-tertiary px-5 py-3 rounded-xl font-bold text-sm font-headline flex items-center gap-2 hover:opacity-90 transition-all active:scale-95 whitespace-nowrap shadow-lg shadow-tertiary/20">
-            <span class="material-symbols-outlined text-[18px]">auto_awesome</span>Generate
+            class="px-5 py-2.5 rounded-xl font-headline font-bold text-sm text-black flex items-center gap-2 hover:opacity-90 active:scale-95 transition-all"
+            style="background:linear-gradient(135deg,#ffd59c,#feb127)">
+            <span class="ms" style="font-size:16px">auto_awesome</span>Generate
           </button>
         </div>
       </div>
-      <div class="flex gap-3 mb-8 flex-wrap">
-        <div class="bg-surface-container-low rounded-xl px-4 py-2 flex items-center gap-2">
-          <span class="text-[10px] uppercase tracking-widest text-gray-500 font-label">Aspect</span>
-          <select id="img-aspect" class="bg-transparent text-primary text-xs font-bold border-none outline-none cursor-pointer">
-            <option value="16:9">16:9 Widescreen</option>
-            <option value="1:1">1:1 Square</option>
-            <option value="9:16">9:16 Portrait</option>
-            <option value="4:3">4:3 Standard</option>
-          </select>
-        </div>
-        <div class="bg-surface-container-low rounded-xl px-4 py-2 flex items-center gap-2">
-          <span class="text-[10px] uppercase tracking-widest text-gray-500 font-label">Steps</span>
-          <select id="img-steps" class="bg-transparent text-primary text-xs font-bold border-none outline-none cursor-pointer">
-            <option value="20">20 — Fast</option>
-            <option value="30" selected>30 — Balanced</option>
-            <option value="50">50 — Quality</option>
-          </select>
+      <div id="img-status" class="hidden py-8 text-center">
+        <div class="flex items-center justify-center gap-4">
+          <div class="w-1 h-8 rounded-full pulse-glow" style="background:#a68cff"></div>
+          <span class="text-sm italic text-[#a68cff]/70" id="img-status-text">Initializing FLUX.1-dev...</span>
         </div>
       </div>
-      <div id="img-status" class="hidden py-10 text-center">
-        <div class="flex items-center justify-center gap-4 text-tertiary">
-          <div class="w-1 h-8 bg-tertiary rounded-full thought-stream-pulse"></div>
-          <span class="text-sm font-body italic text-tertiary/70" id="img-status-text">Initializing FLUX.1-dev...</span>
+      <div id="img-error" class="hidden bg-red-900/20 border border-red-800/30 rounded-xl p-4 text-red-400 text-sm mb-4"></div>
+      <div id="img-output" class="hidden bg-[#111] rounded-2xl overflow-hidden border border-[#262626]">
+        <div class="flex items-center justify-between px-5 py-3 border-b border-[#1f1f1f]">
+          <span class="text-[9px] uppercase tracking-widest text-[#a4e6ff]">Generated · FLUX.1-dev</span>
+          <button onclick="document.getElementById('img-output').classList.add('hidden')" class="text-[#555] hover:text-white">
+            <span class="ms" style="font-size:16px">close</span>
+          </button>
         </div>
+        <img id="gen-img" src="" alt="Generated" class="w-full block"/>
+        <div class="px-5 py-3"><p id="gen-caption" class="text-xs text-[#555] italic"></p></div>
       </div>
-      <div id="img-error" class="hidden bg-error-container/20 border border-error/20 rounded-xl p-4 text-error text-sm font-body mb-4"></div>
-      <div id="img-output" class="hidden">
-        <div class="bg-surface-container-low rounded-2xl overflow-hidden border border-white/5">
-          <div class="flex items-center justify-between px-5 py-3 border-b border-white/5">
-            <span class="text-[10px] uppercase tracking-widest text-primary font-label">Generated · FLUX.1-dev</span>
-            <button onclick="document.getElementById('img-output').classList.add('hidden')" class="text-gray-500 hover:text-white transition-colors">
-              <span class="material-symbols-outlined text-sm">close</span>
-            </button>
+    </div>
+  </div>
+
+  <!-- ──── HISTORY VIEW ──── -->
+  <div id="view-history" class="view overflow-y-auto px-8 py-10">
+    <div class="max-w-4xl mx-auto">
+      <div class="mb-10">
+        <span class="text-[9px] font-black uppercase tracking-[.2em] text-[#a4e6ff]/40 block mb-2">NexoCorp Archive</span>
+        <h1 class="text-5xl font-headline font-black tracking-tighter text-white">Workspace History</h1>
+      </div>
+      <div id="history-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      <div id="history-empty" class="hidden py-20 text-center">
+        <span class="ms text-[#333] block mb-3" style="font-size:48px">history</span>
+        <p class="text-[#555] text-sm">No conversations yet. Start a new chat!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──── PRICING VIEW ──── -->
+  <div id="view-pricing" class="view overflow-y-auto px-8 py-10">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-14">
+        <span class="text-[9px] font-black uppercase tracking-[.2em] text-[#a4e6ff]/50 block mb-3">NexoCorp Subscription</span>
+        <h1 class="text-5xl font-headline font-black tracking-tighter text-white mb-4">DarkFury Pricing</h1>
+        <p class="text-[#555] text-lg font-light">Refined intelligence for creators and enterprises.<br/>Choose the monolith that fits your scale.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+        <!-- Free -->
+        <div class="bg-[#191919] p-8 rounded-2xl border border-white/5 flex flex-col hover:bg-[#1f1f1f] transition-all">
+          <div class="mb-8">
+            <h3 class="font-headline font-bold text-white text-xl mb-1">Free</h3>
+            <p class="text-[#555] text-sm mb-4">Perfect for exploring DarkFury.</p>
+            <div class="flex items-baseline gap-1">
+              <span class="text-5xl font-headline font-black text-white">$0</span>
+              <span class="text-[#555] text-sm">/mo</span>
+            </div>
           </div>
-          <img id="gen-image" src="" alt="Generated" class="w-full block"/>
-          <div class="px-5 py-3"><p id="gen-caption" class="text-xs text-gray-500 font-body italic"></p></div>
+          <ul class="space-y-4 mb-10 flex-1">
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>1,000 requests/month</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Standard Kimi-K2 access</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Community support</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>5 image generations/day</li>
+          </ul>
+          <button class="w-full py-4 bg-[#262626] hover:bg-white hover:text-black text-[#e5e5e5] font-headline font-bold rounded-xl transition-all duration-200 active:scale-95">
+            Get Started Free
+          </button>
+        </div>
+
+        <!-- Pro (featured) -->
+        <div class="bg-[#191919] p-8 rounded-2xl border border-white/20 flex flex-col relative scale-105 shadow-2xl z-10">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-[#e5e5e5] text-[#0e0e0e] text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full whitespace-nowrap">
+            Most Popular
+          </div>
+          <div class="mb-8">
+            <h3 class="font-headline font-bold text-white text-xl mb-1">Pro</h3>
+            <p class="text-[#555] text-sm mb-4">For power users and creators.</p>
+            <div class="flex items-baseline gap-1">
+              <span class="text-5xl font-headline font-black text-white">$29</span>
+              <span class="text-[#555] text-sm">/mo</span>
+            </div>
+          </div>
+          <ul class="space-y-4 mb-10 flex-1">
+            <li class="flex items-center gap-3 text-sm text-white"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Unlimited requests</li>
+            <li class="flex items-center gap-3 text-sm text-white"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Priority Kimi-K2 access</li>
+            <li class="flex items-center gap-3 text-sm text-white"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Unlimited image gen</li>
+            <li class="flex items-center gap-3 text-sm text-white"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>All 5 AI personas</li>
+            <li class="flex items-center gap-3 text-sm text-white"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>API key access</li>
+            <li class="flex items-center gap-3 text-sm text-white"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Priority support</li>
+          </ul>
+          <button class="w-full py-4 text-black font-headline font-bold rounded-xl hover:opacity-90 transition-all active:scale-95" style="background:linear-gradient(135deg,#a4e6ff,#4cd6ff)">
+            Upgrade to Pro
+          </button>
+        </div>
+
+        <!-- Enterprise -->
+        <div class="bg-[#191919] p-8 rounded-2xl border border-white/5 flex flex-col hover:bg-[#1f1f1f] transition-all">
+          <div class="mb-8">
+            <h3 class="font-headline font-bold text-white text-xl mb-1">Enterprise</h3>
+            <p class="text-[#555] text-sm mb-4">For organizations at scale.</p>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-headline font-black text-white">Custom</span>
+            </div>
+          </div>
+          <ul class="space-y-4 mb-10 flex-1">
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Custom model fine-tuning</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>Dedicated hardware nodes</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>24/7 concierge support</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>SOC2 compliance</li>
+            <li class="flex items-center gap-3 text-sm text-[#ababab]"><span class="ms text-[#a4e6ff]" style="font-size:14px;font-variation-settings:'wght' 700">check</span>On-premise deployment</li>
+          </ul>
+          <button class="w-full py-4 bg-[#262626] hover:bg-white hover:text-black text-[#e5e5e5] font-headline font-bold rounded-xl transition-all duration-200 active:scale-95">
+            Contact Sales
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-20 text-center text-[#333] flex flex-col items-center gap-4">
+        <p class="text-[9px] tracking-widest uppercase font-black">Trusted by the vanguard</p>
+        <div class="flex gap-10 grayscale opacity-30">
+          <span class="font-headline font-black text-lg">NEBULA</span>
+          <span class="font-headline font-black text-lg">VOID</span>
+          <span class="font-headline font-black text-lg">AXIOM</span>
+          <span class="font-headline font-black text-lg">NEXUS</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SETTINGS VIEW -->
-  <div id="view-settings" class="hidden flex-1 overflow-y-auto custom-scrollbar pt-14 px-8 md:px-12 py-8">
+  <!-- ──── SETTINGS VIEW ──── -->
+  <div id="view-settings" class="view overflow-y-auto px-8 py-10">
     <div class="max-w-2xl mx-auto">
       <div class="mb-10">
-        <span class="text-xs font-bold uppercase tracking-[0.2em] text-primary/60 mb-2 block font-label">Configuration</span>
-        <h1 class="text-4xl font-black font-headline tracking-tighter text-white">Settings</h1>
+        <span class="text-[9px] font-black uppercase tracking-[.2em] text-[#a4e6ff]/40 block mb-2">Configuration</span>
+        <h1 class="text-4xl font-headline font-black tracking-tighter text-white">Settings</h1>
       </div>
       <div class="flex flex-col gap-4">
-        <div class="bg-surface-container-low rounded-xl p-6 border border-white/5">
+        <!-- Model Info -->
+        <div class="bg-[#191919] rounded-xl p-6 border border-[#262626]/50">
+          <h3 class="font-headline font-bold text-white mb-1">API Configuration</h3>
+          <p class="text-[#555] text-xs mb-3">Powered by Kimi-K2 via NVIDIA NIM.</p>
+          <div class="bg-[#111] p-3 rounded-xl flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-[#a4e6ff] animate-pulse"></div>
+            <span class="text-[#a4e6ff] text-sm font-headline font-bold">NVIDIA NIM · Connected</span>
+            <span class="ml-auto text-[9px] text-[#444] uppercase tracking-widest">Active</span>
+          </div>
+        </div>
+
+        <!-- Models -->
+        <div class="bg-[#191919] rounded-xl p-6 border border-[#262626]/50">
           <h3 class="font-headline font-bold text-white mb-1">Chat Model</h3>
-          <p class="text-gray-500 text-xs mb-4 font-body">Kimi-K2 via NVIDIA NIM — world-class reasoning and coding.</p>
-          <div class="bg-surface-container p-3 rounded-lg flex items-center gap-3">
-            <div class="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-            <span class="text-primary text-sm font-bold font-headline">moonshotai/kimi-k2-instruct</span>
-            <span class="ml-auto text-[10px] text-gray-500 uppercase tracking-widest font-label">Active</span>
+          <p class="text-[#555] text-xs mb-3">Kimi-K2 via NVIDIA NIM.</p>
+          <div class="bg-[#111] p-3 rounded-xl flex items-center gap-3">
+            <div class="w-2 h-2 rounded-full bg-[#a4e6ff] animate-pulse"></div>
+            <span class="text-[#a4e6ff] text-sm font-headline font-bold">claude-sonnet-4-20250514</span>
+            <span class="ml-auto text-[9px] text-[#444] uppercase tracking-widest">Active</span>
           </div>
         </div>
-        <div class="bg-surface-container-low rounded-xl p-6 border border-white/5">
-          <h3 class="font-headline font-bold text-white mb-1">Image Model</h3>
-          <p class="text-gray-500 text-xs mb-4 font-body">FLUX.1-dev for photorealistic image generation.</p>
-          <div class="bg-surface-container p-3 rounded-lg flex items-center gap-3">
-            <div class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></div>
-            <span class="text-tertiary text-sm font-bold font-headline">black-forest-labs/flux-dev</span>
-            <span class="ml-auto text-[10px] text-gray-500 uppercase tracking-widest font-label">Active</span>
-          </div>
-        </div>
-        <div class="bg-surface-container-low rounded-xl p-6 border border-white/5">
-          <h3 class="font-headline font-bold text-white mb-4">Select Persona</h3>
+
+        <!-- Personas -->
+        <div class="bg-[#191919] rounded-xl p-6 border border-[#262626]/50">
+          <h3 class="font-headline font-bold text-white mb-4">Active Persona</h3>
           <div id="settings-personas" class="flex flex-col gap-2"></div>
         </div>
-        <button onclick="if(confirm('Clear all conversations?')){conversations={};saveConvos();renderHistory();showView('chat');document.getElementById('msg-stream').innerHTML='';document.getElementById('welcome-state').classList.remove('hidden');}"
-          class="bg-error-container/20 hover:bg-error-container/40 text-error px-5 py-3 rounded-xl text-sm font-bold font-headline transition-colors flex items-center gap-2">
-          <span class="material-symbols-outlined text-sm">delete_forever</span>Clear All Conversations
+
+        <!-- Danger -->
+        <button onclick="if(confirm('Clear ALL conversations?')){convos={};saveConvos();renderRecent();showView('chat');document.getElementById('msg-stream').innerHTML='';document.getElementById('welcome-state').classList.remove('hidden');}"
+          class="bg-red-900/20 hover:bg-red-900/40 text-red-400 px-5 py-3 rounded-xl text-sm font-headline font-bold transition-colors flex items-center gap-2">
+          <span class="ms" style="font-size:16px">delete_forever</span>Clear All Conversations
         </button>
       </div>
     </div>
   </div>
+
 </main>
+</div>
 
 <script>
-const NVIDIA_KEY='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';
-let conversations={};try{conversations=JSON.parse(localStorage.getItem('df_convos')||'{}');}catch(e){}
-let currentId=null,currentPersona='fury',isLoading=false;
+// ─── STATE ───
+const NVIDIA_KEY = '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';
+let convos = {};
+try { convos = JSON.parse(localStorage.getItem('df_convos') || '{}'); } catch(e) {}
+let currentId = null, currentPersona = 'fury', isLoading = false, thinkHarder = false;
 
-const personas={
-  fury:{name:'Dark Fury',icon:'local_fire_department',system:`You are DarkFury — a hyper-intelligent AI by NexoCorp powered by Kimi-K2. Razor-sharp, brutally honest, devastatingly efficient. Structure complex answers with markdown headers and bullets. Provide genuine insight beyond surface level.`},
-  dev:{name:'Dev Mode',icon:'code',system:`You are DarkFury Dev Mode — world-class software engineer powered by Kimi-K2. Expert in all languages, system design, DevOps. Write clean optimized commented code. Think step by step. Always use proper code blocks with language tags.`},
-  analyst:{name:'Analyst',icon:'analytics',system:`You are DarkFury Analyst Mode — razor-sharp data analyst powered by Kimi-K2. Use first-principles thinking, SWOT, data pyramids. Structured analysis with headers, numbered insights, actionable recommendations. Data-driven and brutally honest.`},
-  creative:{name:'Creative',icon:'palette',system:`You are DarkFury Creative Mode — visionary creative director powered by Kimi-K2. Reject generic. Use unexpected angles. Brainstorm 5-10 ideas from safe to wild. Push every brief to its most interesting version.`},
-  mentor:{name:'Mentor',icon:'school',system:`You are DarkFury Mentor Mode — master teacher powered by Kimi-K2. Feynman technique. Socratic questions. Break complex topics into clear mental models. Honest, constructive feedback without sugarcoating.`}
+const personas = {
+  fury: { name:'Dark Fury', icon:'local_fire_department', system:'You are DarkFury — a hyper-intelligent AI by NexoCorp powered by Kimi-K2. Razor-sharp, brutally honest, devastatingly efficient. Structure complex answers with markdown. Provide genuine insight beyond surface level.' },
+  dev: { name:'Dev Mode', icon:'code', system:'You are DarkFury Dev Mode — world-class software engineer powered by Kimi-K2. Expert in all languages, system design, DevOps. Write clean optimized commented code. Always use proper code blocks with language tags.' },
+  analyst: { name:'Analyst', icon:'analytics', system:'You are DarkFury Analyst Mode — razor-sharp data analyst. Use first-principles thinking, SWOT, data pyramids. Structured analysis with headers, numbered insights, actionable recommendations.' },
+  creative: { name:'Creative', icon:'palette', system:'You are DarkFury Creative Mode — visionary creative director. Reject generic. Use unexpected angles. Brainstorm 5-10 ideas from safe to wild. Push every brief to its most interesting version.' },
+  mentor: { name:'Mentor', icon:'school', system:'You are DarkFury Mentor Mode — master teacher. Feynman technique. Socratic questions. Break complex topics into clear mental models. Honest constructive feedback without sugarcoating.' }
 };
 
-function init(){renderPersonaList();renderPersonaChips();renderHistory();renderSettingsPersonas();showView('chat');}
-
-function showView(v){
-  ['chat','history','image','settings'].forEach(x=>{
-    const el=document.getElementById('view-'+x);
-    el.classList.add('hidden');el.classList.remove('flex');
-  });
-  const el=document.getElementById('view-'+v);
-  el.classList.remove('hidden');
-  if(v==='chat')el.classList.add('flex');
-  ['history','image','settings'].forEach(x=>{
-    const btn=document.getElementById('nav-'+x);
-    if(!btn)return;
-    if(x===v){btn.classList.add('bg-surface-container-high','text-primary');btn.classList.remove('text-gray-400');}
-    else{btn.classList.remove('bg-surface-container-high','text-primary');btn.classList.add('text-gray-400');}
-  });
-  const titles={chat:['DarkFury','Chat Workspace'],history:['Archive','Conversation History'],image:['FLUX.1','Image Generation'],settings:['Config','Settings & Preferences']};
-  const[t,s]=titles[v]||['DarkFury',''];
-  document.getElementById('header-title').textContent=t;
-  document.getElementById('header-sub').textContent=s;
-  if(v==='history')renderHistoryGrid();
+// ─── INIT ───
+function init() {
+  renderPersonas();
+  renderRecent();
+  showView('chat');
 }
 
-function toggleSidebar(){
-  const sb=document.getElementById('sidebar'),ma=document.getElementById('main-area'),hd=document.getElementById('main-header');
-  const hide=!sb.classList.contains('-translate-x-full');
-  sb.classList.toggle('-translate-x-full',hide);
-  ma.style.marginLeft=hide?'0':'16rem';
-  hd.style.left=hide?'0':'16rem';
+// ─── VIEW ROUTING ───
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active-nav', 'text-[#c6c6c7]'));
+  const view = document.getElementById('view-' + v);
+  if(view) view.classList.add('active');
+  const navBtn = document.getElementById('nav-' + v);
+  if(navBtn) navBtn.classList.add('active-nav');
+  const titles = {
+    chat: ['DarkFury', 'Chat Workspace'],
+    image: ['Image Gen', 'FLUX.1-dev · NVIDIA NIM'],
+    history: ['Archive', 'Conversation History'],
+    pricing: ['Pricing', 'Plans & Subscriptions'],
+    settings: ['Settings', 'Configuration']
+  };
+  const [t, s] = titles[v] || ['DarkFury', ''];
+  document.getElementById('hdr-title').textContent = t;
+  document.getElementById('hdr-sub').textContent = s;
+  if(v === 'history') renderHistoryGrid();
+  if(v === 'settings') { renderSettingsPersonas(); }
 }
 
-function renderPersonaList(){
-  document.getElementById('persona-list').innerHTML=Object.entries(personas).map(([k,p])=>
-    `<button onclick="setPersona('${k}')" id="pl-${k}" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all w-full text-left ${k===currentPersona?'bg-surface-container-high text-primary':'text-gray-500 hover:text-white hover:bg-surface-container-high/40'}">
-      <span class="material-symbols-outlined text-[15px] ${k===currentPersona?'fill-icon':''}">${p.icon}</span>${p.name}
+// ─── SIDEBAR ───
+let sidebarOpen = true;
+function toggleSidebar() {
+  const sb = document.getElementById('sidebar');
+  sidebarOpen = !sidebarOpen;
+  sb.style.width = sidebarOpen ? '16rem' : '0';
+  sb.style.padding = sidebarOpen ? '' : '0';
+  sb.style.overflow = sidebarOpen ? '' : 'hidden';
+}
+
+// ─── PERSONAS ───
+function renderPersonas() {
+  const sl = document.getElementById('persona-sidebar');
+  const chips = document.getElementById('persona-chips');
+  if(sl) sl.innerHTML = Object.entries(personas).map(([k,p]) =>
+    `<button onclick="setPersona('${k}')" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-all w-full text-left ${k===currentPersona?'bg-[#262626] text-[#a4e6ff]':'text-[#555] hover:text-white hover:bg-[#262626]/40'}">
+      <span class="ms ${k===currentPersona?'ms-fill':''}" style="font-size:14px">${p.icon}</span>${p.name}
+    </button>`).join('');
+  if(chips) chips.innerHTML = Object.entries(personas).map(([k,p]) =>
+    `<button onclick="setPersona('${k}')" class="px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider transition-all ${k===currentPersona?'bg-[#262626] text-[#a4e6ff]':'text-[#444] hover:text-white'}">
+      ${p.name}
     </button>`).join('');
 }
 
-function renderPersonaChips(){
-  document.getElementById('persona-chips').innerHTML=Object.entries(personas).map(([k,p])=>
-    `<button onclick="setPersona('${k}')" class="px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${k===currentPersona?'bg-surface-container-high text-primary':'text-gray-500 hover:text-white'}">${p.name}</button>`).join('');
-}
-
-function renderSettingsPersonas(){
-  const el=document.getElementById('settings-personas');if(!el)return;
-  el.innerHTML=Object.entries(personas).map(([k,p])=>
-    `<button onclick="setPersona('${k}')" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${k===currentPersona?'bg-surface-container border border-primary/20 text-primary':'bg-surface-container-lowest text-gray-400 hover:bg-surface-container hover:text-white'}">
-      <span class="material-symbols-outlined text-[20px] ${k===currentPersona?'fill-icon':''}">${p.icon}</span>
+function renderSettingsPersonas() {
+  const el = document.getElementById('settings-personas'); if(!el) return;
+  el.innerHTML = Object.entries(personas).map(([k,p]) =>
+    `<button onclick="setPersona('${k}')" class="flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all ${k===currentPersona?'bg-[#262626] text-[#a4e6ff] border border-[#a4e6ff]/20':'bg-[#111] text-[#555] hover:bg-[#1f1f1f] hover:text-white'}">
+      <span class="ms ${k===currentPersona?'ms-fill':''}" style="font-size:18px">${p.icon}</span>
       <span class="font-medium">${p.name}</span>
-      ${k===currentPersona?'<span class="ml-auto text-[10px] text-primary font-bold uppercase tracking-wider">Active</span>':''}
+      ${k===currentPersona?'<span class="ml-auto text-[9px] font-black uppercase tracking-wider text-[#a4e6ff]">Active</span>':''}
     </button>`).join('');
 }
 
-function setPersona(k){
-  currentPersona=k;renderPersonaList();renderPersonaChips();renderSettingsPersonas();
-  if(currentId&&conversations[currentId]){conversations[currentId].persona=k;saveConvos();}
+function setPersona(k) {
+  currentPersona = k;
+  renderPersonas();
+  renderSettingsPersonas();
+  if(currentId && convos[currentId]) { convos[currentId].persona = k; saveConvos(); }
 }
 
-function newChat(){
-  currentId='chat_'+Date.now();
-  conversations[currentId]={persona:currentPersona,messages:[],title:'New Chat',ts:Date.now()};
+// ─── CHAT ───
+function newChat() {
+  currentId = 'c_' + Date.now();
+  convos[currentId] = { persona: currentPersona, messages: [], title: 'New Chat', ts: Date.now() };
   saveConvos();
-  document.getElementById('msg-stream').innerHTML='';
+  document.getElementById('msg-stream').innerHTML = '';
   document.getElementById('welcome-state').classList.remove('hidden');
-  showView('chat');renderHistory();
+  showView('chat');
+  renderRecent();
 }
 
-function quickSend(t){document.getElementById('user-input').value=t;sendMessage();}
+function quickSend(t) {
+  document.getElementById('chat-input').value = t;
+  sendChat();
+}
 
-async function sendMessage(){
-  if(isLoading)return;
-  const inp=document.getElementById('user-input');
-  const text=inp.value.trim();if(!text)return;
-  inp.value='';autoResize(inp);
-  document.getElementById('char-counter').textContent='0 / 4000';
-  if(!currentId||!conversations[currentId]){
-    currentId='chat_'+Date.now();
-    conversations[currentId]={persona:currentPersona,messages:[],title:text.slice(0,50),ts:Date.now()};
+function handleChatKey(e) {
+  if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function resizeChatInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+  document.getElementById('char-count').textContent = el.value.length + ' / 4000';
+}
+
+function toggleThink(el) {
+  thinkHarder = !thinkHarder;
+  el.classList.toggle('on', thinkHarder);
+}
+
+async function sendChat() {
+  if(isLoading) return;
+  const inp = document.getElementById('chat-input');
+  const text = inp.value.trim(); if(!text) return;
+  inp.value = ''; inp.style.height = 'auto';
+  document.getElementById('char-count').textContent = '0 / 4000';
+
+  if(!currentId || !convos[currentId]) {
+    currentId = 'c_' + Date.now();
+    convos[currentId] = { persona: currentPersona, messages: [], title: text.slice(0,50), ts: Date.now() };
   }
-  const conv=conversations[currentId];
-  conv.messages.push({role:'user',content:text});
-  if(conv.title==='New Chat')conv.title=text.slice(0,50);
-  conv.ts=Date.now();saveConvos();
+  const conv = convos[currentId];
+  conv.messages.push({ role:'user', content: text });
+  if(conv.title === 'New Chat') conv.title = text.slice(0,50);
+  conv.ts = Date.now(); saveConvos();
+
   document.getElementById('welcome-state').classList.add('hidden');
   appendUserMsg(text);
-  const typEl=appendTyping();scrollToBottom();
-  isLoading=true;document.getElementById('send-btn').disabled=true;
-  try{
-    const msgs=conv.messages.map(m=>({role:m.role,content:m.content}));
-    const res=await fetch('https://integrate.api.nvidia.com/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY},
-      body:JSON.stringify({model:'moonshotai/kimi-k2-instruct',messages:[{role:'system',content:personas[currentPersona].system},...msgs],temperature:0.7,top_p:0.9,max_tokens:4096})
-    });
-    const data=await res.json();typEl.remove();
-    const reply=data.choices?.[0]?.message?.content||(data.error?'⚠️ '+(data.error.message||JSON.stringify(data.error)):'⚠️ No response.');
-    conv.messages.push({role:'assistant',content:reply});saveConvos();
-    appendAIMsg(reply,conv.persona||currentPersona);renderHistory();scrollToBottom();
-  }catch(e){typEl.remove();appendAIMsg('⚠️ Connection failed: '+e.message,currentPersona);}
-  isLoading=false;document.getElementById('send-btn').disabled=false;
+  const typEl = appendTyping();
+  scrollBottom();
+
+  isLoading = true;
+  document.getElementById('send-btn').disabled = true;
+
+  try {
+    const sysPrompt = thinkHarder
+      ? personas[currentPersona].system + '\n\nThink step-by-step carefully before answering. Show your reasoning process.'
+      : personas[currentPersona].system;
+    const msgs = conv.messages.map(m => ({ role: m.role, content: m.content }));
+
+    const proxyUrl = window.location.origin + window.location.pathname + '?action=chat&body=' + encodeURIComponent(JSON.stringify({ messages: [{ role: 'system', content: sysPrompt }, ...msgs] }));
+    const res = await fetch(proxyUrl, { credentials: 'include' });
+    const text = await res.text();
+    const jsonStart = text.indexOf('{');
+    const data = jsonStart >= 0 ? JSON.parse(text.slice(jsonStart)) : {};
+    typEl.remove();
+    const reply = data.choices?.[0]?.message?.content || (data.error ? '⚠ ' + (data.error.message || JSON.stringify(data.error)) : '⚠ No response. Raw: ' + text.slice(0,200));
+    conv.messages.push({ role:'assistant', content: reply });
+    saveConvos();
+    appendAIMsg(reply, conv.persona || currentPersona);
+    renderRecent();
+    scrollBottom();
+  } catch(e) {
+    typEl.remove();
+    appendAIMsg('⚠ Connection failed: ' + e.message, currentPersona);
+  }
+
+  isLoading = false;
+  document.getElementById('send-btn').disabled = false;
+  inp.focus();
 }
 
-function appendUserMsg(text){
-  const s=document.getElementById('msg-stream');
-  const d=document.createElement('div');
-  d.className='flex flex-col gap-3 group msg-enter';
-  d.innerHTML=`<div class="flex items-center gap-3"><span class="text-[10px] uppercase tracking-widest text-gray-600 font-label">You</span><div class="h-px flex-1 bg-surface-container-low opacity-40"></div><span class="text-[10px] text-gray-700 font-label">${new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'})}</span></div><p class="text-base text-on-surface font-body leading-relaxed max-w-2xl">${escHtml(text)}</p>`;
+function appendUserMsg(text) {
+  const s = document.getElementById('msg-stream');
+  const d = document.createElement('div');
+  d.className = 'flex flex-col gap-3 group msg-in';
+  const t = new Date().toLocaleTimeString('en', { hour:'2-digit', minute:'2-digit' });
+  d.innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-[9px] uppercase tracking-widest text-[#444]">You</span>
+      <div class="h-px flex-1 bg-[#191919]"></div>
+      <span class="text-[9px] text-[#333]">${t}</span>
+    </div>
+    <p class="text-xl font-headline font-medium text-white leading-relaxed max-w-2xl">${escHtml(text)}</p>`;
   s.appendChild(d);
 }
 
-function appendAIMsg(content,persona){
-  const s=document.getElementById('msg-stream');
-  const p=personas[persona]||personas.fury;
-  const d=document.createElement('div');
-  d.className='flex flex-col gap-4 group msg-enter';
-  d.innerHTML=`
+function appendAIMsg(content, persona) {
+  const s = document.getElementById('msg-stream');
+  const p = personas[persona] || personas.fury;
+  const d = document.createElement('div');
+  d.className = 'flex flex-col gap-4 group msg-in';
+  d.innerHTML = `
     <div class="flex items-center gap-3">
-      <span class="material-symbols-outlined text-primary fill-icon" style="font-size:16px">${p.icon}</span>
-      <span class="text-[10px] uppercase tracking-widest text-primary font-label">${p.name}</span>
-      <div class="h-px flex-1 bg-surface-container-low opacity-40"></div>
+      <span class="ms ms-fill text-[#a4e6ff]" style="font-size:15px">${p.icon}</span>
+      <span class="text-[9px] uppercase tracking-widest text-[#a4e6ff]">${p.name}</span>
+      <div class="h-px flex-1 bg-[#191919]"></div>
     </div>
-    <div class="text-on-surface-variant font-body leading-relaxed max-w-3xl text-sm space-y-2">${fmtContent(content)}</div>
+    <div class="text-[#c6c6c7] leading-relaxed text-base max-w-3xl space-y-2">${fmtContent(content)}</div>
     <div class="flex gap-3 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-      <button onclick="cpyText(this)" data-t="${encodeURIComponent(content)}" class="text-gray-600 hover:text-primary transition-colors flex items-center gap-1 text-xs">
-        <span class="material-symbols-outlined text-sm">content_copy</span>
+      <button onclick="cpyText(this)" data-t="${encodeURIComponent(content)}" class="text-[#333] hover:text-[#a4e6ff] transition-colors flex items-center gap-1 text-xs">
+        <span class="ms" style="font-size:16px">content_copy</span>
       </button>
     </div>`;
   s.appendChild(d);
 }
 
-function appendTyping(){
-  const s=document.getElementById('msg-stream');
-  const d=document.createElement('div');
-  d.className='flex flex-col gap-4 msg-enter';
-  d.innerHTML=`<div class="flex items-center gap-3"><span class="text-[10px] uppercase tracking-widest text-primary font-label">DarkFury</span><div class="h-px flex-1 bg-surface-container-low opacity-40"></div></div>
-    <div class="flex items-center gap-4 text-tertiary/60">
-      <div class="w-1 h-7 bg-tertiary rounded-full thought-stream-pulse"></div>
-      <div class="flex gap-1.5 items-center"><div class="w-1.5 h-1.5 rounded-full bg-primary typing-dot"></div><div class="w-1.5 h-1.5 rounded-full bg-primary typing-dot"></div><div class="w-1.5 h-1.5 rounded-full bg-primary typing-dot"></div></div>
-      <span class="text-xs italic font-body">Processing with Kimi-K2...</span>
+function appendTyping() {
+  const s = document.getElementById('msg-stream');
+  const d = document.createElement('div');
+  d.className = 'flex flex-col gap-4 msg-in';
+  d.innerHTML = `
+    <div class="flex items-center gap-3">
+      <span class="text-[9px] uppercase tracking-widest text-[#a4e6ff]">DarkFury</span>
+      <div class="h-px flex-1 bg-[#191919]"></div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div class="w-1 h-7 rounded-full pulse-glow" style="background:#a68cff"></div>
+      <div class="flex gap-1.5 items-center">
+        <div class="w-1.5 h-1.5 rounded-full bg-[#a4e6ff] typing-dot"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-[#a4e6ff] typing-dot"></div>
+        <div class="w-1.5 h-1.5 rounded-full bg-[#a4e6ff] typing-dot"></div>
+      </div>
+      <span class="text-xs italic text-[#444]">Processing with Kimi-K2...</span>
     </div>`;
-  s.appendChild(d);return d;
+  s.appendChild(d); return d;
 }
 
-function clearChat(){
-  if(currentId&&conversations[currentId]){conversations[currentId].messages=[];saveConvos();}
-  document.getElementById('msg-stream').innerHTML='';
+function clearChat() {
+  if(currentId && convos[currentId]) { convos[currentId].messages = []; saveConvos(); }
+  document.getElementById('msg-stream').innerHTML = '';
   document.getElementById('welcome-state').classList.remove('hidden');
 }
 
-function cpyText(btn){
-  const t=decodeURIComponent(btn.dataset.t);
-  navigator.clipboard.writeText(t).then(()=>{btn.querySelector('span').textContent='check';setTimeout(()=>btn.querySelector('span').textContent='content_copy',1500);});
+function cpyText(btn) {
+  const t = decodeURIComponent(btn.dataset.t);
+  navigator.clipboard.writeText(t).then(() => {
+    btn.querySelector('span').textContent = 'check';
+    setTimeout(() => btn.querySelector('span').textContent = 'content_copy', 1500);
+  });
 }
 
-function renderHistory(){
-  const list=document.getElementById('history-list');
-  const convs=Object.entries(conversations).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0)).slice(0,12);
-  list.innerHTML=convs.map(([id,c])=>
-    `<button onclick="loadChat('${id}')" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left transition-all w-full group ${id===currentId?'bg-surface-container-high text-white':'text-gray-500 hover:text-white hover:bg-surface-container-high/40'}">
-      <span class="material-symbols-outlined text-primary/60" style="font-size:13px">chat_bubble</span>
+// ─── HISTORY ───
+function renderRecent() {
+  const el = document.getElementById('recent-list');
+  const sorted = Object.entries(convos).sort((a,b) => (b[1].ts||0)-(a[1].ts||0)).slice(0,12);
+  el.innerHTML = sorted.map(([id,c]) =>
+    `<button onclick="loadChat('${id}')" class="flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-left transition-all w-full group ${id===currentId?'bg-[#262626] text-white':'text-[#555] hover:text-white hover:bg-[#262626]/40'}">
+      <span class="ms text-[#a4e6ff]/40" style="font-size:12px">chat_bubble</span>
       <span class="truncate flex-1">${c.title||'Chat'}</span>
-      <button onclick="event.stopPropagation();deleteChat('${id}')" class="opacity-0 group-hover:opacity-100 hover:text-error transition-all shrink-0"><span class="material-symbols-outlined" style="font-size:11px">close</span></button>
-    </button>`).join('')||'<p class="text-xs text-gray-600 px-3 py-2">No recent chats</p>';
+      <button onclick="event.stopPropagation();deleteChat('${id}')" class="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-all shrink-0">
+        <span class="ms" style="font-size:10px">close</span>
+      </button>
+    </button>`).join('') || '<p class="text-[9px] text-[#333] px-3 py-2">No chats yet</p>';
 }
 
-function renderHistoryGrid(){
-  const grid=document.getElementById('history-grid'),empty=document.getElementById('history-empty');
-  const convs=Object.entries(conversations).sort((a,b)=>(b[1].ts||0)-(a[1].ts||0));
-  if(!convs.length){grid.innerHTML='';empty.classList.remove('hidden');return;}
+function renderHistoryGrid() {
+  const grid = document.getElementById('history-grid');
+  const empty = document.getElementById('history-empty');
+  const sorted = Object.entries(convos).sort((a,b) => (b[1].ts||0)-(a[1].ts||0));
+  if(!sorted.length) { grid.innerHTML = ''; empty.classList.remove('hidden'); return; }
   empty.classList.add('hidden');
-  grid.innerHTML=convs.map(([id,c],i)=>{
-    const p=personas[c.persona]||personas.fury;
-    const mc=c.messages?.length||0;
-    const lastMsg=c.messages?.filter(m=>m.role==='assistant').slice(-1)[0];
-    return `<div onclick="loadChat('${id}')" class="bg-surface-container-low hover:bg-surface-container rounded-xl p-6 border border-white/5 hover:border-primary/20 cursor-pointer transition-all group ${i===0?'md:col-span-2 border-l-4 border-l-primary':''}">
+  grid.innerHTML = sorted.map(([id,c],i) => {
+    const p = personas[c.persona] || personas.fury;
+    const last = c.messages?.filter(m=>m.role==='assistant').slice(-1)[0];
+    return `<div onclick="loadChat('${id}')" class="bg-[#191919] hover:bg-[#1f1f1f] rounded-xl p-6 border border-[#262626]/50 hover:border-[#a4e6ff]/20 cursor-pointer transition-all group ${i===0?'md:col-span-2':''}">
       <div class="flex justify-between items-start mb-4">
         <div class="flex items-center gap-3">
-          <div class="bg-primary/10 p-2 rounded-xl"><span class="material-symbols-outlined text-primary fill-icon">${p.icon}</span></div>
+          <div class="bg-[#a4e6ff]/10 p-2 rounded-xl"><span class="ms ms-fill text-[#a4e6ff]" style="font-size:18px">${p.icon}</span></div>
           <div>
-            <h3 class="font-bold font-headline text-white group-hover:text-primary transition-colors ${i===0?'text-lg':'text-sm'}">${escHtml(c.title||'Untitled')}</h3>
-            <p class="text-[10px] text-gray-500">${mc} messages · ${p.name}</p>
+            <h3 class="font-headline font-bold text-white group-hover:text-[#a4e6ff] transition-colors ${i===0?'text-base':'text-sm'}">${escHtml(c.title||'Untitled')}</h3>
+            <p class="text-[9px] text-[#444]">${c.messages?.length||0} messages · ${p.name}</p>
           </div>
         </div>
-        <button onclick="event.stopPropagation();deleteChat('${id}')" class="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-error transition-all p-1"><span class="material-symbols-outlined text-sm">delete</span></button>
+        <button onclick="event.stopPropagation();deleteChat('${id}')" class="opacity-0 group-hover:opacity-100 text-[#333] hover:text-red-400 transition-all">
+          <span class="ms" style="font-size:16px">delete</span>
+        </button>
       </div>
-      ${lastMsg?`<p class="text-xs text-gray-500 line-clamp-2 font-body leading-relaxed">${escHtml(lastMsg.content.slice(0,150))}...</p>`:''}
+      ${last?`<p class="text-xs text-[#444] line-clamp-2 leading-relaxed">${escHtml(last.content.slice(0,150))}...</p>`:''}
     </div>`;
   }).join('');
 }
 
-function loadChat(id){
-  currentId=id;const conv=conversations[id];
-  if(conv?.persona)setPersona(conv.persona);
-  document.getElementById('msg-stream').innerHTML='';
+function loadChat(id) {
+  currentId = id; const conv = convos[id];
+  if(conv?.persona) setPersona(conv.persona);
+  document.getElementById('msg-stream').innerHTML = '';
   document.getElementById('welcome-state').classList.add('hidden');
-  conv.messages.forEach(m=>{if(m.role==='user')appendUserMsg(m.content);else appendAIMsg(m.content,conv.persona||currentPersona);});
-  showView('chat');renderHistory();scrollToBottom();
+  conv.messages.forEach(m => { if(m.role==='user') appendUserMsg(m.content); else appendAIMsg(m.content, conv.persona||currentPersona); });
+  showView('chat'); renderRecent(); scrollBottom();
 }
 
-function deleteChat(id){
-  delete conversations[id];
-  if(currentId===id){currentId=null;document.getElementById('msg-stream').innerHTML='';document.getElementById('welcome-state').classList.remove('hidden');}
-  saveConvos();renderHistory();renderHistoryGrid();
+function deleteChat(id) {
+  delete convos[id];
+  if(currentId===id) { currentId=null; document.getElementById('msg-stream').innerHTML=''; document.getElementById('welcome-state').classList.remove('hidden'); }
+  saveConvos(); renderRecent(); renderHistoryGrid();
 }
 
-function saveConvos(){try{localStorage.setItem('df_convos',JSON.stringify(conversations));}catch(e){}}
+function saveConvos() { try { localStorage.setItem('df_convos', JSON.stringify(convos)); } catch(e) {} }
 
-async function generateImage(){
-  const p=document.getElementById('img-prompt').value.trim();if(!p)return;
-  const steps=document.getElementById('img-steps').value;
-  const aspect=document.getElementById('img-aspect').value;
+// ─── IMAGE GEN ───
+async function generateImage() {
+  const p = document.getElementById('img-prompt').value.trim(); if(!p) return;
+  const steps = document.getElementById('img-steps').value;
+  const aspect = document.getElementById('img-aspect').value;
   document.getElementById('img-output').classList.add('hidden');
   document.getElementById('img-error').classList.add('hidden');
   document.getElementById('img-status').classList.remove('hidden');
-  document.getElementById('gen-btn').disabled=true;
-  document.getElementById('img-status-text').textContent='Sending prompt to FLUX.1-dev...';
-  try{
-    const res=await fetch('https://ai.api.nvidia.com/v1/genai/black-forest-labs/flux-dev',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+NVIDIA_KEY,'Accept':'application/json'},
-      body:JSON.stringify({prompt:p,cfg_scale:7.5,aspect_ratio:aspect,seed:Math.floor(Math.random()*99999),steps:parseInt(steps),negative_prompt:'blurry, low quality, distorted, ugly, watermark'})
-    });
-    const data=await res.json();
+  document.getElementById('gen-btn').disabled = true;
+  document.getElementById('img-status-text').textContent = 'Sending prompt to FLUX.1-dev...';
+
+  try {
+    const imgUrl = window.location.origin + window.location.pathname + '?action=image&body=' + encodeURIComponent(JSON.stringify({ prompt: p, aspect_ratio: aspect, steps: parseInt(steps) }));
+    const res = await fetch(imgUrl, { credentials: 'include' });
+    const text2 = await res.text();
+    const jsonStart2 = text2.indexOf('{');
+    const data = jsonStart2 >= 0 ? JSON.parse(text2.slice(jsonStart2)) : {};
     document.getElementById('img-status').classList.add('hidden');
-    let src=null;
-    if(data.artifacts?.[0]){const b=data.artifacts[0].base64||data.artifacts[0].b64_json;if(b)src='data:image/jpeg;base64,'+b;}
-    else if(data.images?.[0]){const b=data.images[0].b64_json||data.images[0].base64;if(b)src='data:image/jpeg;base64,'+b;}
-    else if(data.data?.[0]){const v=data.data[0].b64_json||data.data[0].url;src=(v&&!v.startsWith('http'))?'data:image/jpeg;base64,'+v:v;}
-    if(src){
-      document.getElementById('gen-image').src=src;
-      document.getElementById('gen-caption').textContent='"'+p+'"';
+    let src = null;
+    if(data.artifacts?.[0]) { const b=data.artifacts[0].base64||data.artifacts[0].b64_json; if(b) src='data:image/jpeg;base64,'+b; }
+    else if(data.images?.[0]) { const b=data.images[0].b64_json||data.images[0].base64; if(b) src='data:image/jpeg;base64,'+b; }
+    else if(data.data?.[0]) { const v=data.data[0].b64_json||data.data[0].url; src=(v&&!v.startsWith('http'))?'data:image/jpeg;base64,'+v:v; }
+    if(src) {
+      document.getElementById('gen-img').src = src;
+      document.getElementById('gen-caption').textContent = '"' + p + '"';
       document.getElementById('img-output').classList.remove('hidden');
-    }else throw new Error('Unexpected response. Keys: '+Object.keys(data).join(', '));
-  }catch(e){
+    } else throw new Error('Unexpected response. Keys: ' + Object.keys(data).join(', '));
+  } catch(e) {
     document.getElementById('img-status').classList.add('hidden');
-    const er=document.getElementById('img-error');er.textContent='⚠️ '+e.message;er.classList.remove('hidden');
+    const er = document.getElementById('img-error'); er.textContent = '⚠ ' + e.message; er.classList.remove('hidden');
   }
-  document.getElementById('gen-btn').disabled=false;
+  document.getElementById('gen-btn').disabled = false;
 }
 
-function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
-function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';document.getElementById('char-counter').textContent=el.value.length+' / 4000';}
-function scrollToBottom(){const m=document.getElementById('messages');setTimeout(()=>m.scrollTop=m.scrollHeight,50);}
-function escHtml(t){return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function fmtContent(text){
-  text=text.replace(/```(\w*)\n?([\s\S]*?)```/g,(_,l,c)=>`<pre><code>${escHtml(c.trim())}</code></pre>`);
-  text=text.replace(/`([^`\n]+)`/g,'<code>$1</code>');
-  text=text.replace(/\*\*(.*?)\*\*/g,'<strong class="text-white">$1</strong>');
-  text=text.replace(/^### (.*?)$/gm,'<h4 class="text-white font-headline font-bold text-sm mt-4 mb-1">$1</h4>');
-  text=text.replace(/^## (.*?)$/gm,'<h3 class="text-white font-headline font-bold text-base mt-5 mb-2">$1</h3>');
-  text=text.replace(/^# (.*?)$/gm,'<h2 class="text-primary font-headline font-black text-lg mt-5 mb-2 tracking-tight">$1</h2>');
-  text=text.replace(/^[\-\*] (.*?)$/gm,'<li class="ml-4">• $1</li>');
-  text=text.replace(/(<li.*?<\/li>\n?)+/g,m=>`<ul class="my-2 space-y-1">${m}</ul>`);
-  text=text.replace(/\n\n/g,'</p><p class="mt-3">');
-  text=text.replace(/\n/g,'<br/>');
-  return '<p>'+text+'</p>';
+// ─── SETTINGS ───
+
+
+
+
+// ─── UTILS ───
+function scrollBottom() { const m = document.getElementById('messages'); if(m) setTimeout(() => m.scrollTop = m.scrollHeight, 50); }
+
+function escHtml(t) { return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function fmtContent(text) {
+  text = text.replace(/```(\w*)\n?([\s\S]*?)```/g, (_,l,c) => `<pre><code>${escHtml(c.trim())}</code></pre>`);
+  text = text.replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  text = text.replace(/\*\*(.*?)\*\*/g, '<strong style="color:#e5e5e5">$1</strong>');
+  text = text.replace(/^### (.*?)$/gm, '<h4 style="color:white;font-family:Manrope;font-weight:700;font-size:.9rem;margin:1rem 0 .25rem">$1</h4>');
+  text = text.replace(/^## (.*?)$/gm, '<h3 style="color:white;font-family:Manrope;font-weight:700;font-size:1rem;margin:1.25rem 0 .5rem">$1</h3>');
+  text = text.replace(/^# (.*?)$/gm, '<h2 style="color:#a4e6ff;font-family:Manrope;font-weight:900;font-size:1.2rem;margin:1.5rem 0 .5rem">$1</h2>');
+  text = text.replace(/^[\-\*] (.*?)$/gm, '<li style="margin-left:1rem;list-style:disc">$1</li>');
+  text = text.replace(/(<li.*?<\/li>\n?)+/g, m => `<ul style="margin:.5rem 0;display:flex;flex-direction:column;gap:.25rem">${m}</ul>`);
+  text = text.replace(/\n\n/g, '</p><p style="margin-top:.75rem">');
+  text = text.replace(/\n/g, '<br/>');
+  return '<p>' + text + '</p>';
 }
+
 init();
 </script>
 </body>
